@@ -31,7 +31,7 @@
         ></pair>
         <br>
         <div class="container">
-            <run-controls candleType="candleType">
+            <run-controls :candleType="candleType">
             </run-controls>
 <!--            <pair-record-->
 <!--                :latest-data-route="latestDataRoute"-->
@@ -61,9 +61,6 @@ export default {
             pushLasts: [],
             open: false,
         }
-    },
-
-    mounted() {
     },
 
     methods: {

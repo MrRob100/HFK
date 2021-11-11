@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 
 class FindPairsController extends Controller
 {
-    public function findPairs(Request $request) : array
+    public function findPairs(Request $request)
     {
         FindPairsJob::dispatch($request->candleType);
     }

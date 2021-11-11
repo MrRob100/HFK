@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Models\Message;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -33,5 +34,29 @@ class FindPairsJob implements ShouldQueue
         $filtered = $data->filter(function ($value, $key) {
             return strpos($value->symbol, 'USDT') !== false ? $value : null;
         });
+
+        $checked = 0;
+        foreach ($filtered->toArray() as $symbolOuter) {
+            foreach ($filtered->toArray() as $symbolInner) {
+                $checked++;
+                if ($checked % 100 == 0) {
+
+                    $total = $filtered->count() * $filtered->count();
+
+                    Message::updateOrCreate(
+                        [
+                            'type' => 'pair_check',
+                        ],
+                        [
+                            'message' => "checked $checked out of $total ($symbolOuter->symbol X $symbolInner->symbol)",
+                            'type' => 'pair_check',
+                        ]
+                    );
+                }
+            }
+        }
+
+        //nested foreach to get all combos, get ohlc and go back 100 and do calcs
+        //make a db table with updates about whats going on, poll it with vue
     }
 }
