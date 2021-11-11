@@ -32,12 +32,23 @@ class FindPairsJob implements ShouldQueue
         }
 
         $filtered = $data->filter(function ($value, $key) {
+
+            //better way of slimming down results to test
+
             return strpos($value->symbol, 'USDT') !== false ? $value : null;
+//            return strpos($value->symbol, 'SUSDT') !== false ? $value : null;
         });
 
         $checked = 0;
         foreach ($filtered->toArray() as $symbolOuter) {
             foreach ($filtered->toArray() as $symbolInner) {
+
+                //fetch data combining outer and inner, pass in candleType (use service)
+                //perform calcs in other foreach
+                //store all in db with scores
+                //run separatly for akro nulls
+                //paginated table of scores, sortable
+
                 $checked++;
                 if ($checked % 100 == 0) {
 
