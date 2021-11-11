@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\ChartController;
+use App\Http\Controllers\HomeController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -22,4 +24,4 @@ Route::get('/chart', [ChartController::class, 'data'])->name('chart.data');
 
 Auth::routes();
 
-Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+Route::get('/', [HomeController::class, 'index'])->name('home');
