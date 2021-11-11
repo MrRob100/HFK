@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ChartController;
+use App\Http\Controllers\FindPairsController;
 use App\Http\Controllers\HomeController;
 use Illuminate\Support\Facades\Route;
 
@@ -25,3 +26,5 @@ Route::get('/chart', [ChartController::class, 'data'])->name('chart.data');
 Auth::routes();
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
+
+Route::post('/find_pairs', [FindPairsController::class, 'findPairs'])->name('find_pairs');

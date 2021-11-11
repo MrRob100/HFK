@@ -10,6 +10,20 @@
 <!--                ></list>-->
             </div>
         </div>
+        <div class="m-2">
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="hour" id="hour" value="hour" v-model="candleType" checked>
+                <label class="form-check-label" for="hour">
+                    Hour
+                </label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="day" id="day" value="day" v-model="candleType">
+                <label class="form-check-label" for="day">
+                    Day
+                </label>
+            </div>
+        </div>
         <pair
             @lasts="sendLasts"
             :symbols="value"
@@ -17,16 +31,8 @@
         ></pair>
         <br>
         <div class="container">
-<!--            <controls-->
-<!--                :symbol1="v1.toUpperCase()"-->
-<!--                :symbol2="v2.toUpperCase()"-->
-<!--                :cr="cr"-->
-<!--                :position-route="positionRoute"-->
-<!--                :pr="pr"-->
-<!--                :record-route="recordRoute"-->
-<!--                :transfer-route="transferRoute"-->
-<!--            >-->
-<!--            </controls>-->
+            <run-controls candleType="candleType">
+            </run-controls>
 <!--            <pair-record-->
 <!--                :latest-data-route="latestDataRoute"-->
 <!--                :balance-route="balanceRoute"-->
@@ -44,6 +50,7 @@ export default {
 
     data: function () {
         return {
+            candleType: 'hour',
             value: '',
             symbols: {
                 binance: [],
