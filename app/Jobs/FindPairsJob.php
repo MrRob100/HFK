@@ -177,7 +177,7 @@ class FindPairsJob
                 'ma' => $ma,
             ];
 
-            $distanceFromMa = $candleAve['candleAve'] - $ma;
+            $distanceFromMa = $candleAve['candleAve'] - $ma; //NO THIS NEED TO BE IN %
             $totalDistanceFromMa += $distanceFromMa;
 
             $i++;
