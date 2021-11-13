@@ -12,13 +12,13 @@
         </div>
         <div class="m-2">
             <div class="form-check">
-                <input class="form-check-input" type="radio" name="hour" id="hour" value="hour" v-model="candleType" checked>
+                <input class="form-check-input" type="radio" name="hour" id="hour" value="hour" v-model="candleType">
                 <label class="form-check-label" for="hour">
                     Hour
                 </label>
             </div>
             <div class="form-check">
-                <input class="form-check-input" type="radio" name="day" id="day" value="day" v-model="candleType">
+                <input class="form-check-input" type="radio" name="day" id="day" value="day" v-model="candleType" checked>
                 <label class="form-check-label" for="day">
                     Day
                 </label>
@@ -50,7 +50,7 @@ export default {
 
     data: function () {
         return {
-            candleType: 'hour',
+            candleType: 'day',
             value: '',
             symbols: {
                 binance: [],

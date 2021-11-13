@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Cache;
 
 class BinanceGetService {
 
-    public function apiCall($symbol, $interval = "1h")
+    public function apiCall($symbol, $interval = "1d")
     {
         if (Cache::has($symbol.$interval)) {
             $response = Cache::get($symbol.$interval);
