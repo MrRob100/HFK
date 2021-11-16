@@ -14,6 +14,7 @@ class Result extends Model
         'candle_type',
         'count_above',
         'count_below',
+        'count_difference',
         'sd_above',
         'sd_below',
         'sd_ab',
