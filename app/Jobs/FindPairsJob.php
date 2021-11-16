@@ -44,8 +44,11 @@ class FindPairsJob
 
             if (
                 !strpos($value->symbol, 'DOWN') !== false
+                && !strpos($value->symbol, 'BULL') !== false
+                && !strpos($value->symbol, 'BEAR') !== false
                 && strpos($value->symbol, 'USDT') !== false
-                && strpos($value->symbol, 'S') !== false //to slim down
+                && strpos($value->symbol, 'O') !== false //to slim down while testing
+                && strpos($value->symbol, 'S') !== false //to slim down while testing
             ) {
                 return $value;
             }
@@ -55,52 +58,59 @@ class FindPairsJob
         });
 
         $checked = 0;
-        foreach ($filtered->toArray() as $symbolOuter) {
+//        foreach ($filtered->toArray() as $symbolOuter) {
+//
+//            $dataOuter = $this->getCandlesData($symbolOuter->symbol);
+//
+//            foreach ($filtered->toArray() as $symbolInner) {
+//
+//                if ($symbolOuter->symbol !== $symbolInner->symbol) {
+//                    $dataInner = $this->getCandlesData($symbolInner->symbol);
+//
+//                    $pairData = $this->createPairData($dataOuter, $dataInner);
+//
+//                    if (sizeof($pairData) > 90) {
+//                        $results = $this->performCalcs($pairData, $this->candleType, $symbolInner->symbol, $symbolOuter->symbol);
+//                    }
+//
+//                    $total = $filtered->count() * $filtered->count();
+//
+//                    $checked++;
+//                    if ($checked % 100 === 0) {
+//
+//                        Message::updateOrCreate(
+//                            [
+//                                'type' => 'pair_check',
+//                            ],
+//                            [
+//                                'message' => "checked $checked out of $total ($symbolOuter->symbol X $symbolInner->symbol)",
+//                                'type' => 'pair_check',
+//                            ]
+//                        );
+//                    }
+//
+//                    if ($checked === $total - 1) {
+//                        Message::updateOrCreate(
+//                            [
+//                                'type' => 'pair_check',
+//                            ],
+//                            [
+//                                'message' => "checked all $total pairs",
+//                                'type' => 'pair_check',
+//                            ]
+//                        );
+//                    }
+//                }
+//            }
+//        }
 
-            $dataOuter = $this->getCandlesData($symbolOuter->symbol);
+        //get akronuls
+        $akro = $this->getCandlesData('AKROUSDT');
+        $nuls = $this->getCandlesData('NULSUSDT');
 
-            foreach ($filtered->toArray() as $symbolInner) {
+        $akronuls = $this->createPairData($akro, $nuls);
 
-                if ($symbolOuter->symbol !== $symbolInner->symbol) {
-                    $dataInner = $this->getCandlesData($symbolInner->symbol);
-
-                    $pairData = $this->createPairData($dataOuter, $dataInner);
-
-                    dump($symbolInner->symbol);
-                    dump($symbolOuter->symbol);
-
-                    $results = $this->performCalcs($pairData, $symbolInner->symbol, $symbolOuter->symbol);
-
-                    $total = $filtered->count() * $filtered->count();
-
-                    $checked++;
-                    if ($checked % 100 === 0) {
-
-                        Message::updateOrCreate(
-                            [
-                                'type' => 'pair_check',
-                            ],
-                            [
-                                'message' => "checked $checked out of $total ($symbolOuter->symbol X $symbolInner->symbol)",
-                                'type' => 'pair_check',
-                            ]
-                        );
-                    }
-
-                    if ($checked === $total - 1) {
-                        Message::updateOrCreate(
-                            [
-                                'type' => 'pair_check',
-                            ],
-                            [
-                                'message' => "checked all $total pairs",
-                                'type' => 'pair_check',
-                            ]
-                        );
-                    }
-                }
-            }
-        }
+        $akronuls_result = $this->performCalcs($akronuls, $this->candleType, 'AKROUSDT', 'NULSUSDT');
     }
 
     public function getCandlesData($symbol): array
@@ -120,18 +130,19 @@ class FindPairsJob
         return json_decode($candles, true);
     }
 
-    public function performCalcs($pairData, $symbol1, $symbol2): array
+    public function performCalcs($pairData, $candleType, $symbol1, $symbol2)
     {
         $maPoint = 10;
 
         $candleAves = [];
+        $pureAves = [];
+        $totalAves = 0;
         foreach ($pairData as $item) {
             $collection = collect($item);
 
             $first_key = $collection->keys()->first();
-            $notime = $collection->forget($first_key);
 
-            $candleAve = $notime->sum() / 4;
+            $candleAve = ($item[1] + $item[4]) / 2;
             $candleAves[] = [
                 'time' => $item[0],
                 'o' => $item[1],
@@ -140,54 +151,55 @@ class FindPairsJob
                 'c' => $item[4],
                 'candleAve' => $candleAve,
             ];
+
+            array_push($pureAves, $candleAve);
+            $totalAves += $candleAve;
         }
 
-        $i = 0;
-        $totalTilTen = 0;
-        $ma = [];
-        $crossings = 0;
-        $totalDistanceFromMa = 0;
-        foreach ($candleAves as $candleAve) {
-            $totalTilTen += $candleAve['candleAve'];
+        $ave = $totalAves / sizeof($pairData);
 
-            if ($i >= $maPoint) {
-                $totalTilTen -= $candleAves[$i - $maPoint]['candleAve'];
-            }
+        $thresh = 0.05;
 
-            if ($i === 0) {
-                $maDiv = 1;
-            } elseif ($i < 10) {
-                $maDiv = $i + 1;
+        $countAbove = 0;
+        $countBelow = 0;
+        $uppers = [];
+        $lowers = [];
+        foreach ($pureAves as $pureAve) {
+            if ($pureAve > $ave) {
+                //above
+                $threshUpper = $ave + ($ave * $thresh);
+                if ($pureAve > $threshUpper) {
+                    $countAbove ++;
+                    $uppers[] = $pureAve;
+                }
             } else {
-                $maDiv = 10;
+                //below
+                $threshLower = $ave - ($ave * $thresh);
+                if ($pureAve < $threshLower) {
+                    $countBelow ++;
+                    $lowers[] = $pureAve;
+                }
             }
-
-            $ma = $totalTilTen / $maDiv;
-
-            $ma[] = [
-                'time' => $candleAve['time'],
-                'o' => $candleAve['o'],
-                'h' => $candleAve['h'],
-                'l' => $candleAve['l'],
-                'c' => $candleAve['c'],
-                'candleAve' => $candleAve['candleAve'],
-                'totalTilTen' => $totalTilTen,
-                'maDiv' => $maDiv,
-                'i' => $i,
-                'ma' => $ma,
-            ];
-
-            $distanceFromMa = ($candleAve['candleAve'] - $ma) / $ma; //NO THIS NEED TO BE IN %
-            $totalDistanceFromMa += $distanceFromMa;
-
-            $i++;
         }
 
-//        Result::create([
-//            'pair' =>
-//        ]);
+//        $pureAves;
 
-        return $ma;
+//        $sd = stats_standard_deviation(collect($candleAves)->pluck('candleAve'));
+
+        $sdAbove = $this->standardDeviation($uppers);
+        $sdBelow = $this->standardDeviation($lowers);
+
+        Result::create([
+            'pair' => "$symbol1$symbol2",
+            'candle_type' => $candleType,
+            'count_above' => $countAbove,
+            'count_below' => $countBelow,
+            'sd_above' => $sdAbove,
+            'sd_below' => $sdBelow,
+            'sd_ab' => $sdAbove * $sdBelow,
+        ]);
+
+        return [];
     }
 
     public function createPairData($data1, $data2): array
@@ -212,5 +224,28 @@ class FindPairsJob
         }
 
         return $pair;
+    }
+
+    public function standardDeviation($arr)
+    {
+        $num_of_elements = count($arr);
+
+        if ($num_of_elements > 0) {
+            $variance = 0.0;
+
+            // calculating mean using array_sum() method
+            $average = array_sum($arr)/$num_of_elements;
+
+            foreach($arr as $i)
+            {
+                // sum of squares of differences between
+                // all numbers and means.
+                $variance += pow(($i - $average), 2);
+            }
+
+            return (float)sqrt($variance/$num_of_elements);
+        } else {
+            return null;
+        }
     }
 }

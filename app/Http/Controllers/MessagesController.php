@@ -7,8 +7,8 @@ use Illuminate\Http\Request;
 
 class MessagesController extends Controller
 {
-    public function getLatest(Request $request): string
+    public function getLatest(Request $request): ?string
     {
-        return Message::whereType($request->type)->first()->message;
+        return Message::whereType($request->type)->first() ? Message::whereType($request->type)->first()->message : null;
     }
 }

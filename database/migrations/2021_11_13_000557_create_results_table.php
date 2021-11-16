@@ -17,10 +17,11 @@ class CreateResultsTable extends Migration
             $table->id();
             $table->string('pair');
             $table->string('candle_type');
-            $table->float('distance_from_ma')->nullable();
-            $table->integer('crossings')->nullable();
-            $table->float('evenness')->nullable();
-            $table->float('score')->nullable();
+            $table->integer('count_above');
+            $table->integer('count_below');
+            $table->string('sd_above')->nullable();
+            $table->string('sd_below')->nullable();
+            $table->string('sd_ab')->nullable();
             $table->timestamps();
         });
     }
