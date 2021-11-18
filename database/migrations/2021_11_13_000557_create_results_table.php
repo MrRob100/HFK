@@ -15,7 +15,8 @@ class CreateResultsTable extends Migration
     {
         Schema::create('results', function (Blueprint $table) {
             $table->id();
-            $table->string('pair');
+            $table->string('symbol1');
+            $table->string('symbol2');
             $table->string('candle_type');
             $table->integer('count_above');
             $table->integer('count_below');

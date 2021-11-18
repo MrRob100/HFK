@@ -92,6 +92,16 @@ export default {
         }
     },
 
+    mounted() {
+        let _this = this;
+        window.showResult = function(key) {
+            let symbol1 = document.getElementById(`symbol1_${key}`).value;
+            let symbol2 = document.getElementById(`symbol2_${key}`).value;
+
+            _this.getData(symbol1, symbol2, _this.type);
+        }
+    },
+
     methods: {
         getData: function(s1, s2, type) {
             axios.get('/chart_data', {

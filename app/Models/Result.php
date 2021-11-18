@@ -10,7 +10,8 @@ class Result extends Model
     use HasFactory;
 
     protected $fillable = [
-        'pair',
+        'symbol1',
+        'symbol2',
         'candle_type',
         'count_above',
         'count_below',

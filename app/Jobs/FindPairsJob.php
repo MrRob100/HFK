@@ -191,12 +191,9 @@ class FindPairsJob implements ShouldQueue
         $sdAbove = $this->standardDeviation($uppers);
         $sdBelow = $this->standardDeviation($lowers);
 
-        $countDiff = $countAbove - $countBelow;
-
-        $pair = "$symbol1$symbol2";
-
         Result::create([
-            'pair' => str_replace('USDT', '', $pair),
+            'symbol1' => str_replace('USDT', '', $symbol1),
+            'symbol2' => str_replace('USDT', '', $symbol2),
             'candle_type' => $candleType,
             'count_above' => $countAbove,
             'count_below' => $countBelow,

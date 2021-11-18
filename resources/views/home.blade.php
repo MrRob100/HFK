@@ -13,10 +13,11 @@
         <th></th>
         </thead>
         <tbody>
-        @foreach ($results as $result)
+        @foreach ($results as $key => $result)
             <tr>
                 <td>
-                    {{ $result->pair }}
+                    {{ $result->symbol1 }}
+                    {{ $result->symbol2 }}
                 </td>
                 <td>
                     {{ $result->count_above }}
@@ -29,7 +30,9 @@
                 </td>
                 <td></td>
                 <td>
-                    <button class="btn btn-success btn-sm" id="show_pair_{{ $result->pair }}">show pair</button>
+                    <button onclick="showResult({{ $key }})" class="btn btn-success btn-sm">show pair</button>
+                    <input id="symbol1_{{ $key }}" type="hidden" value="{{ $result->symbol1 }}">
+                    <input id="symbol2_{{ $key }}" type="hidden" value="{{ $result->symbol2 }}">
                 </td>
             </tr>
         @endforeach
