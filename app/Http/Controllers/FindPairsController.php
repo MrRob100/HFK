@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Jobs\FindPairsJob;
+use App\Models\Result;
 use Illuminate\Http\Request;
 
 class FindPairsController extends Controller

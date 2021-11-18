@@ -10,7 +10,7 @@
 <!--                ></list>-->
             </div>
         </div>
-        <div class="m-2">
+        <div class="m-3">
             <div class="form-check">
                 <input class="form-check-input" type="radio" name="hour" id="hour" value="hour" v-model="candleType">
                 <label class="form-check-label" for="hour">
@@ -23,11 +23,40 @@
                     Day
                 </label>
             </div>
+            <br>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="kucoin" id="kucoin" value="kucoin" v-model="marketType">
+                <label class="form-check-label" for="kucoin">
+                    Kucoin
+                </label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="binance" id="binance" value="binance" v-model="marketType" checked>
+                <label class="form-check-label" for="binance">
+                    Binance
+                </label>
+            </div>
+            <div class="form-group">
+                <div class="row">
+                    <div class="col-3 pr-0">
+                        <input type="text" :value="v1.toUpperCase()" @input="v1 = $event.target.value.toUpperCase()" class="form-control mb-1">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-3 mr-0 pr-0">
+                        <input type="text" :value="v2.toUpperCase()" @input="v2 = $event.target.value.toUpperCase()" class="form-control">
+                    </div>
+
+                </div>
+                <br>
+                <button @click="go" class="btn btn-sml btn-success">go</button>
+            </div>
         </div>
+
         <pair
             @lasts="sendLasts"
             :symbols="value"
-            :marketType="marketType"
+            :type="marketType"
         ></pair>
         <br>
         <div class="container">
@@ -52,6 +81,8 @@ export default {
         return {
             candleType: 'day',
             value: '',
+            v1: "",
+            v2: "",
             symbols: {
                 binance: [],
                 kucoin: [],

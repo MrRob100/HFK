@@ -48,9 +48,8 @@ export default {
     },
 
     props: {
-        cr: "",
-        s: "",
-        t: "",
+        symbols: "",
+        type: "",
     },
 
     data: function() {
@@ -94,12 +93,12 @@ export default {
     },
 
     methods: {
-        getData: function(s1, s2, t) {
-            axios.get(this.cr, {
+        getData: function(s1, s2, type) {
+            axios.get('/chart_data', {
                 params: {
                     s1,
                     s2,
-                    t,
+                    type,
                 }
             }).then(response => {
                 this.tradingVue1.data.chart.data = response.data['first'];
@@ -115,7 +114,6 @@ export default {
                 ];
 
                 this.$emit('lasts', lasts)
-
             });
         },
         setChartHeading: function(val) {
@@ -133,9 +131,9 @@ export default {
     },
 
     watch: {
-        s: function(val) {
+        symbols: function(val) {
             if (val.length == 2) {
-                this.getData(val[0].name, val[1].name, this.t);
+                this.getData(val[0].name, val[1].name, this.type);
                 this.setChartHeading(val);
             }
         },

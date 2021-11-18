@@ -19,10 +19,9 @@ class CreateResultsTable extends Migration
             $table->string('candle_type');
             $table->integer('count_above');
             $table->integer('count_below');
-            $table->integer('count_difference')->nullable();
+            $table->integer('count_middle')->nullable();
             $table->string('sd_above')->nullable();
             $table->string('sd_below')->nullable();
-            $table->string('sd_ab')->nullable();
             $table->timestamps();
         });
     }

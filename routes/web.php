@@ -22,7 +22,7 @@ Route::get('/', function () {
 });
 
 /* chart data */
-Route::get('/chart', [ChartController::class, 'data'])->name('chart.data');
+Route::get('/chart_data', [ChartController::class, 'data'])->name('chart.data');
 
 Auth::routes();
 
