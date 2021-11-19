@@ -48,13 +48,21 @@ export default {
     },
 
     mounted() {
-        //set interval get messages every few secs
+
+        //get again if candle type changes upstream
+
+        this.getResults();
     },
 
     methods: {
-        //axios get messages
         getResults: function() {
-
+            axios.get('/results', {
+                params: {
+                    candleType: this.candleType,
+                }
+            }).then(response => {
+                this.results = response.data;
+            });
         },
     },
 

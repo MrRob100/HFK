@@ -4,6 +4,7 @@ use App\Http\Controllers\ChartController;
 use App\Http\Controllers\FindPairsController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\MessagesController;
+use App\Http\Controllers\ResultsController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -31,3 +32,5 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::post('/find_pairs', [FindPairsController::class, 'findPairs'])->name('find_pairs');
 
 Route::get('/latest_message', [MessagesController::class, 'getLatest'])->name('get_latest');
+
+Route::get('/results', [ResultsController::class, 'index'])->name('get_results');

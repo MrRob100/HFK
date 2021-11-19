@@ -12,13 +12,13 @@
         </div>
         <div class="m-3">
             <div class="form-check">
-                <input class="form-check-input" type="radio" name="hour" id="hour" value="hour" v-model="candleType">
+                <input class="form-check-input" type="radio" name="hour" id="hour" value="1h" v-model="candleType">
                 <label class="form-check-label" for="hour">
                     Hour
                 </label>
             </div>
             <div class="form-check">
-                <input class="form-check-input" type="radio" name="day" id="day" value="day" v-model="candleType" checked>
+                <input class="form-check-input" type="radio" name="day" id="day" value="1d" v-model="candleType" checked>
                 <label class="form-check-label" for="day">
                     Day
                 </label>
@@ -68,18 +68,21 @@
 <!--                :value="value"-->
 <!--                :push-lasts="pushLasts">-->
 <!--            </pair-record>-->
+            <results :candleType="candleType"></results>
         </div>
     </div>
 </template>
 
 <script>
 
+import Results from "./Results";
 export default {
+    components: {Results},
     props: [],
 
     data: function () {
         return {
-            candleType: 'day',
+            candleType: '1d',
             value: '',
             v1: "",
             v2: "",
@@ -109,7 +112,6 @@ export default {
                 {"name": (this.v1).toUpperCase()},
                 {"name": (this.v2).toUpperCase()},
             ]
-
         },
         populate: function(s1, s2) {
             this.v1 = s1;
