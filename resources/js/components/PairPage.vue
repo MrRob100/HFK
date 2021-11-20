@@ -57,6 +57,7 @@
             @lasts="sendLasts"
             :symbols="value"
             :type="marketType"
+            :candleType="candleType"
         ></pair>
         <br>
         <div class="container">
@@ -68,7 +69,11 @@
 <!--                :value="value"-->
 <!--                :push-lasts="pushLasts">-->
 <!--            </pair-record>-->
-            <results :candleType="candleType"></results>
+            <results
+                :candleType="candleType"
+                @show="show"
+            >
+            </results>
         </div>
     </div>
 </template>
@@ -146,6 +151,15 @@ export default {
                     {"name": (response.data.v2).toUpperCase()},
                 ];
             });
+        },
+        show: function(symbol1, symbol2) {
+            this.v1 = symbol1;
+            this.v2 = symbol2;
+
+            this.value = [
+                {"name": (symbol1).toUpperCase()},
+                {"name": (symbol2).toUpperCase()},
+            ]
         },
         trash: function() {
             let _this = this;

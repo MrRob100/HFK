@@ -30,8 +30,8 @@ class ChartController extends Controller
 
     public function binance(Request $request): array
     {
-        $response1 = $this->binanceGetService->apiCall($request->s1);
-        $response2 = $this->binanceGetService->apiCall($request->s2);
+        $response1 = $this->binanceGetService->apiCall($request->s1, $request->candleType);
+        $response2 = $this->binanceGetService->apiCall($request->s2, $request->candleType);
 
         $size_max = max(sizeof($response1), sizeof($response2) - 1);
         $size_min = min(sizeof($response1), sizeof($response2) - 1);

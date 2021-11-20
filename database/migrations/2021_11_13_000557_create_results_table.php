@@ -23,6 +23,7 @@ class CreateResultsTable extends Migration
             $table->integer('count_middle')->nullable();
             $table->string('sd_above')->nullable();
             $table->string('sd_below')->nullable();
+            $table->string('ave')->nullable();
             $table->timestamps();
         });
     }

@@ -2,8 +2,10 @@
 
 namespace App\Jobs;
 
+use App\Models\Candle;
 use App\Models\Message;
 use App\Models\Result;
+use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -18,14 +20,9 @@ class FindPairsJob implements ShouldQueue
 
     protected $candleType;
 
-    protected $candleKey = [
-        'hour' => '1h',
-        'day' => '1d',
-    ];
-
     public function __construct(string $candleType)
     {
-        $this->candleType = $this->candleKey[$candleType];
+        $this->candleType = $candleType;
     }
 
     public function handle()
@@ -105,7 +102,7 @@ class FindPairsJob implements ShouldQueue
         $akro = $this->getCandlesData('AKROUSDT', $this->candleType);
         $nuls = $this->getCandlesData('NULSUSDT', $this->candleType);
 
-        $akronuls = $this->createPairData($akro, $nuls);
+        $akronuls = $this->createPairData($akro, $nuls, true);
 
         $akronuls_result = $this->performCalcs($akronuls, $this->candleType, 'AKROUSDT', 'NULSUSDT');
     }
@@ -117,11 +114,13 @@ class FindPairsJob implements ShouldQueue
         if (file_exists($fileName)) {
             $candles = file_get_contents($fileName);
         } else {
-//            $startTime = 1627776000000; //1 august
-            $startTime = 1625154858000; //1 july
-            $endTime = 1635724799000; //31 october
+            if ($candleType === "1h") {
+                $startTime = Carbon::now()->subMonth()->unix() * 1000;
+            } else {
+                //should be 1d
+                $startTime = Carbon::now()->subMonths(4)->unix() * 1000;
+            }
 
-//            $candles = file_get_contents("https://www.binance.com/api/v3/klines?symbol={$symbol}&interval={$this->candleType}&startTime=$startTime&endTime=$endTime");
             $candles = file_get_contents("https://www.binance.com/api/v3/klines?symbol={$symbol}&interval={$this->candleType}&startTime=$startTime");
             file_put_contents($fileName, $candles);
         }
@@ -151,7 +150,29 @@ class FindPairsJob implements ShouldQueue
 
             array_push($pureAves, $candleAve);
             $totalAves += $candleAve;
+
+            if ($symbol1 = 'AKRO' && $symbol1 == 'NULS') {
+
+                $candles = Candle::whereUnix($item[0])->wherePair('akronuls')->all();
+
+                if ($candles->isNotEmpty()) {
+                    Candle::create(
+                        [
+                            'pair' => 'akronuls',
+                            'unix' => $item[0],
+                            'o' => $item[1],
+                            'h' => $item[2],
+                            'l' => $item[3],
+                            'c' => $item[4],
+                            'ave' => $candleAve,
+                        ]
+                    );
+                }
+            }
         }
+
+
+        //MAKE MOVING AVERAGE AGAIN
 
         $ave = $totalAves / sizeof($pairData);
 
@@ -200,6 +221,7 @@ class FindPairsJob implements ShouldQueue
             'count_middle' => $countMiddle,
             'sd_above' => $sdAbove,
             'sd_below' => $sdBelow,
+            'ave' => $ave,
         ]);
 
         return [];
@@ -215,12 +237,18 @@ class FindPairsJob implements ShouldQueue
 
             if ($i < $size_min) {
 
+                $unix = $data1[$i][0];
+                $o = $data1[$i][1] / $data2[$i][1];
+                $h = $data1[$i][2] / $data2[$i][2];
+                $l = $data1[$i][3] / $data2[$i][3];
+                $c = $data1[$i][4] / $data2[$i][4];
+
                 $pair[] = [
-                    $data1[$i][0], //timestamp
-                    $data1[$i][1] / $data2[$i][1],
-                    $data1[$i][2] / $data2[$i][2],
-                    $data1[$i][3] / $data2[$i][3],
-                    $data1[$i][4] / $data2[$i][4],
+                    $unix,
+                    $o,
+                    $h,
+                    $l,
+                    $c,
 //                $response1[$i][5], // volume
                 ];
             }
