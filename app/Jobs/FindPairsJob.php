@@ -12,9 +12,10 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
-//class FindPairsJob
-class FindPairsJob implements ShouldQueue
+class FindPairsJob
+//class FindPairsJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
@@ -52,51 +53,51 @@ class FindPairsJob implements ShouldQueue
         });
 
         $checked = 0;
-        foreach ($filtered->toArray() as $symbolOuter) {
-
-            $dataOuter = $this->getCandlesData($symbolOuter->symbol, $this->candleType);
-
-            foreach ($filtered->toArray() as $symbolInner) {
-
-                if ($symbolOuter->symbol !== $symbolInner->symbol) {
-                    $dataInner = $this->getCandlesData($symbolInner->symbol, $this->candleType);
-
-                    $pairData = $this->createPairData($dataOuter, $dataInner);
-
-                    if (sizeof($pairData) > 90) {
-                        $results = $this->performCalcs($pairData, $this->candleType, $symbolInner->symbol, $symbolOuter->symbol);
-                    }
-
-                    $total = $filtered->count() * $filtered->count();
-
-                    $checked++;
-                    if ($checked % 100 === 0) {
-
-                        Message::updateOrCreate(
-                            [
-                                'type' => 'pair_check',
-                            ],
-                            [
-                                'message' => "checked $checked out of $total ($symbolOuter->symbol X $symbolInner->symbol)",
-                                'type' => 'pair_check',
-                            ]
-                        );
-                    }
-
-                    if ($checked === $total - 1) {
-                        Message::updateOrCreate(
-                            [
-                                'type' => 'pair_check',
-                            ],
-                            [
-                                'message' => "checked all $total pairs",
-                                'type' => 'pair_check',
-                            ]
-                        );
-                    }
-                }
-            }
-        }
+//        foreach ($filtered->toArray() as $symbolOuter) {
+//
+//            $dataOuter = $this->getCandlesData($symbolOuter->symbol, $this->candleType);
+//
+//            foreach ($filtered->toArray() as $symbolInner) {
+//
+//                if ($symbolOuter->symbol !== $symbolInner->symbol) {
+//                    $dataInner = $this->getCandlesData($symbolInner->symbol, $this->candleType);
+//
+//                    $pairData = $this->createPairData($dataOuter, $dataInner);
+//
+//                    if (sizeof($pairData) > 90) {
+//                        $results = $this->performCalcs($pairData, $this->candleType, $symbolInner->symbol, $symbolOuter->symbol);
+//                    }
+//
+//                    $total = $filtered->count() * $filtered->count();
+//
+//                    $checked++;
+//                    if ($checked % 100 === 0) {
+//
+//                        Message::updateOrCreate(
+//                            [
+//                                'type' => 'pair_check',
+//                            ],
+//                            [
+//                                'message' => "checked $checked out of $total ($symbolOuter->symbol X $symbolInner->symbol)",
+//                                'type' => 'pair_check',
+//                            ]
+//                        );
+//                    }
+//
+//                    if ($checked === $total - 1) {
+//                        Message::updateOrCreate(
+//                            [
+//                                'type' => 'pair_check',
+//                            ],
+//                            [
+//                                'message' => "checked all $total pairs",
+//                                'type' => 'pair_check',
+//                            ]
+//                        );
+//                    }
+//                }
+//            }
+//        }
 
         //get akronuls
         $akro = $this->getCandlesData('AKROUSDT', $this->candleType);
@@ -133,10 +134,27 @@ class FindPairsJob implements ShouldQueue
         $candleAves = [];
         $pureAves = [];
         $totalAves = 0;
+        $i = 0;
         foreach ($pairData as $item) {
             $collection = collect($item);
 
             $first_key = $collection->keys()->first();
+
+            $ma10 = null;
+            if ($i >= 10) {
+                $tot = $pairData[$i - 9][4] +
+                    $pairData[$i - 8][4] +
+                    $pairData[$i - 7][4] +
+                    $pairData[$i - 6][4] +
+                    $pairData[$i - 5][4] +
+                    $pairData[$i - 4][4] +
+                    $pairData[$i - 3][4] +
+                    $pairData[$i - 2][4] +
+                    $pairData[$i - 1][4] +
+                    $pairData[$i][4];
+
+                $ma10 = $tot / 10;
+            }
 
             $candleAve = ($item[1] + $item[4]) / 2;
             $candleAves[] = [
@@ -146,16 +164,17 @@ class FindPairsJob implements ShouldQueue
                 'l' => $item[3],
                 'c' => $item[4],
                 'candleAve' => $candleAve,
+                'ma' => $ma10,
             ];
 
             array_push($pureAves, $candleAve);
             $totalAves += $candleAve;
 
-            if ($symbol1 = 'AKRO' && $symbol1 == 'NULS') {
+            if ($symbol1 === 'AKROUSDT' && $symbol2 === 'NULSUSDT') {
 
-                $candles = Candle::whereUnix($item[0])->wherePair('akronuls')->all();
+                $candles = Candle::whereUnix($item[0])->wherePair('akronuls')->get();
 
-                if ($candles->isNotEmpty()) {
+                if ($candles->isEmpty()) {
                     Candle::create(
                         [
                             'pair' => 'akronuls',
@@ -164,11 +183,12 @@ class FindPairsJob implements ShouldQueue
                             'h' => $item[2],
                             'l' => $item[3],
                             'c' => $item[4],
-                            'ave' => $candleAve,
+                            'ave' => $ma10,
                         ]
                     );
                 }
             }
+            $i++;
         }
 
 
