@@ -9,12 +9,15 @@ class ResultsController extends Controller
 {
     public function index(Request $request)
     {
-        return Result::where('sd_above', '<', 0.005)
-            ->where('candle_type', $request->candleType)
-            ->where('sd_below', '<', 0.005)
-            ->where('count_above', '>', 30)
-            ->orderBy('count_middle', 'DESC')
-            ->limit('10')
-            ->get();
+        if ($request->band) {
+            $result = Result::where('candle_type', $request->candleType)
+                ->orderBy($request->band, 'DESC')
+                ->where(str_replace('up', '', $request->band . 'down'), '>', 5)
+                ->paginate(10);
+        } else {
+            $result = Result::where('candle_type', $request->candleType)->paginate(10);
+        }
+
+        return $result;
     }
 }

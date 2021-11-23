@@ -15,8 +15,8 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
-class FindPairsJob
-//class FindPairsJob implements ShouldQueue
+//class FindPairsJob
+class FindPairsJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
@@ -57,51 +57,51 @@ class FindPairsJob
         });
 
         $checked = 0;
-//        foreach ($filtered->toArray() as $symbolOuter) {
-//
-//            $dataOuter = $this->formatPairService->getCandlesData($symbolOuter->symbol, $this->candleType);
-//
-//            foreach ($filtered->toArray() as $symbolInner) {
-//
-//                if ($symbolOuter->symbol !== $symbolInner->symbol) {
-//                    $dataInner = $this->formatPairService->getCandlesData($symbolInner->symbol, $this->candleType);
-//
-//                    $pairData = $this->createPairData($dataOuter, $dataInner);
-//
-//                    if (sizeof($pairData) > 90) {
-//                        $results = $this->performCalcs($pairData, $this->candleType, $symbolInner->symbol, $symbolOuter->symbol);
-//                    }
-//
-//                    $total = $filtered->count() * $filtered->count();
-//
-//                    $checked++;
-//                    if ($checked % 100 === 0) {
-//
-//                        Message::updateOrCreate(
-//                            [
-//                                'type' => 'pair_check',
-//                            ],
-//                            [
-//                                'message' => "checked $checked out of $total ($symbolOuter->symbol X $symbolInner->symbol)",
-//                                'type' => 'pair_check',
-//                            ]
-//                        );
-//                    }
-//
-//                    if ($checked === $total - 1) {
-//                        Message::updateOrCreate(
-//                            [
-//                                'type' => 'pair_check',
-//                            ],
-//                            [
-//                                'message' => "checked all $total pairs",
-//                                'type' => 'pair_check',
-//                            ]
-//                        );
-//                    }
-//                }
-//            }
-//        }
+        foreach ($filtered->toArray() as $symbolOuter) {
+
+            $dataOuter = $this->formatPairsService->getCandlesData($symbolOuter->symbol, $this->candleType);
+
+            foreach ($filtered->toArray() as $symbolInner) {
+
+                if ($symbolOuter->symbol !== $symbolInner->symbol) {
+                    $dataInner = $this->formatPairsService->getCandlesData($symbolInner->symbol, $this->candleType);
+
+                    $pairData = $this->formatPairsService->createPairData($dataOuter, $dataInner);
+
+                    if (sizeof($pairData) > 90) {
+                        $results = $this->performCalcs($pairData, $this->candleType, $symbolInner->symbol, $symbolOuter->symbol);
+                    }
+
+                    $total = $filtered->count() * $filtered->count();
+
+                    $checked++;
+                    if ($checked % 100 === 0) {
+
+                        Message::updateOrCreate(
+                            [
+                                'type' => 'pair_check',
+                            ],
+                            [
+                                'message' => "checked $checked out of $total ($symbolOuter->symbol X $symbolInner->symbol)",
+                                'type' => 'pair_check',
+                            ]
+                        );
+                    }
+
+                    if ($checked === $total - 1) {
+                        Message::updateOrCreate(
+                            [
+                                'type' => 'pair_check',
+                            ],
+                            [
+                                'message' => "checked all $total pairs",
+                                'type' => 'pair_check',
+                            ]
+                        );
+                    }
+                }
+            }
+        }
 
         //get akronuls
         $akro = $this->formatPairsService->getCandlesData('AKROUSDT', $this->candleType);
@@ -139,6 +139,9 @@ class FindPairsJob
         $eightup = 0;
         $nineup = 0;
         $tenup = 0;
+
+        $upneighbours = 0;
+        $downneighbours = 0;
 
         $onedown = 0;
         $twodown = 0;
@@ -257,11 +260,14 @@ class FindPairsJob
                     $tendown++;
                 }
 
-//                dump($close);
-//                dump($ema);
-//                dump($ema + $oneperc);
-//                dump($ema + $twoperc);
-//                die();
+                //up & down neighbours
+                if ($close > $ema && $pairData[$i -1][4] > $previousMA) {
+                    $upneighbours++;
+                }
+
+                if ($close < $ema && $pairData[$i -1][4] < $previousMA) {
+                    $downneighbours++;
+                }
             }
 
             $truth = Truth::whereUnix($item[0])->wherePair('akronuls')->get();
@@ -283,32 +289,42 @@ class FindPairsJob
             $i++;
         }
 
-        Result::create([
-            'symbol1' => $symbol1,
-            'symbol2' => $symbol2,
-            'candle_type' => $candleType,
-            'middles' => $middles,
-            'oneup' => $oneup,
-            'twoup' => $twoup,
-            'threeup' => $threeup,
-            'fourup' => $fourup,
-            'fiveup' => $fiveup,
-            'sixup' => $sixup,
-            'sevenup' => $sevenup,
-            'eightup' => $eightup,
-            'nineup' => $nineup,
-            'tenup' => $tenup,
-            'onedown' => $onedown,
-            'twodown' => $twodown,
-            'threedown' => $threedown,
-            'fourdown' => $fourdown,
-            'fivedown' => $fivedown,
-            'sixdown' => $sixdown,
-            'sevendown' => $sevendown,
-            'eightdown' => $eightdown,
-            'ninedown' => $ninedown,
-            'tendown' => $tendown,
-        ]);
+        $s1 = str_replace('USDT', '', $symbol1);
+        $s2 = str_replace('USDT', '', $symbol2);
+
+        if (Result::where('symbol1', $s1)->where('symbol2', $s2)->where('candle_type', $candleType)->isEmpty()) {
+
+            Result::create([
+                'symbol1' => $s1,
+                'symbol2' => $s2,
+                'candle_type' => $candleType,
+                'start' => Carbon::createFromTimestamp($pairData[0][0] / 1000)->toDate(),
+                'end' => Carbon::createFromTimestamp($pairData[sizeof($pairData) -1][0] / 1000)->toDate(),
+                'middles' => $middles,
+                'oneup' => $oneup,
+                'twoup' => $twoup,
+                'threeup' => $threeup,
+                'fourup' => $fourup,
+                'fiveup' => $fiveup,
+                'sixup' => $sixup,
+                'sevenup' => $sevenup,
+                'eightup' => $eightup,
+                'nineup' => $nineup,
+                'tenup' => $tenup,
+                'onedown' => $onedown,
+                'twodown' => $twodown,
+                'threedown' => $threedown,
+                'fourdown' => $fourdown,
+                'fivedown' => $fivedown,
+                'sixdown' => $sixdown,
+                'sevendown' => $sevendown,
+                'eightdown' => $eightdown,
+                'ninedown' => $ninedown,
+                'tendown' => $tendown,
+                'upneighbours' => $upneighbours,
+                'downneighbours' => $downneighbours,
+            ]);
+        }
 
         return [];
     }

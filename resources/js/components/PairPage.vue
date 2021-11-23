@@ -60,7 +60,7 @@
             :candleType="candleType"
         ></pair>
         <br>
-        <div class="container">
+        <div>
             <run-controls :candleType="candleType">
             </run-controls>
 <!--            <pair-record-->

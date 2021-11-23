@@ -13,6 +13,8 @@ class Result extends Model
         'symbol1',
         'symbol2',
         'candle_type',
+        'start',
+        'end',
         'middles',
         'oneup',
         'twoup',
@@ -34,5 +36,7 @@ class Result extends Model
         'eightdown',
         'ninedown',
         'tendown',
+        'upneighbours',
+        'downneighbours',
     ];
 }

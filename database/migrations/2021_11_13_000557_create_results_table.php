@@ -13,13 +13,13 @@ class CreateResultsTable extends Migration
      */
     public function up()
     {
-
-
         Schema::create('results', function (Blueprint $table) {
             $table->id();
             $table->string('symbol1');
             $table->string('symbol2');
             $table->string('candle_type');
+            $table->date('start');
+            $table->date('end');
             $table->integer('middles');
             $table->integer('oneup');
             $table->integer('twoup');
@@ -41,6 +41,8 @@ class CreateResultsTable extends Migration
             $table->integer('eightdown');
             $table->integer('ninedown');
             $table->integer('tendown');
+            $table->integer('upneighbours');
+            $table->integer('downneighbours');
             $table->timestamps();
         });
     }

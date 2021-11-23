@@ -15,6 +15,27 @@ return [
     |
     */
 
+    'environments' => [
+        'production' => [
+            'supervisor-1' => [
+                'connection' => 'redis',
+                'queue' => 'default',
+                'balance' => 'simple',
+                'processes' => 5,
+                'tries' => 3,
+                'timeout' => 60 // Timeout after 60 seconds
+            ],
+            'supervisor-long-running' => [
+                'connection' => 'redis-long-running',
+                'queue' => 'default_long',
+                'balance' => 'simple',
+                'processes' => 2,
+                'tries' => 2,
+                'timeout' => 900 // Timeout after 15 minutes
+            ]
+        ],
+    ],
+
     'domain' => env('HORIZON_DOMAIN', null),
 
     /*
