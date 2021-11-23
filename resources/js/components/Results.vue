@@ -1,6 +1,6 @@
 <template>
-    <div>
-        <table class="table table-responsive table-striped">
+    <div class="container">
+        <table class="table table-responsive table-striped table-sm">
             <thead>
             <th>Pair</th>
             <th>Candle Type</th>
@@ -16,10 +16,10 @@
             <th>10 up</th>
             <th>1 down</th>
             <th>2 down</th>
-            <th>3 down</th>
-            <th>4 down</th>
-            <th>5 down</th>
-            <th>6 down</th>
+            <th :class="band === 'threeup' ? 'bg-info' : ''">3 down</th>
+            <th :class="band === 'fourup' ? 'bg-info' : ''">4 down</th>
+            <th :class="band === 'fiveup' ? 'bg-info' : ''">5 down</th>
+            <th :class="band === 'sixup' ? 'bg-info' : ''">6 down</th>
             <th>10 down</th>
             <th></th>
             </thead>
@@ -47,16 +47,16 @@
                 <td>
                     {{ result.twoup }}
                 </td>
-                <td>
+                <td :class="band === 'threeup' ? 'bg-info' : ''">
                     {{ result.threeup }}
                 </td>
-                <td>
+                <td :class="band === 'fourup' ? 'bg-info' : ''">
                     {{ result.fourup }}
                 </td>
-                <td>
+                <td :class="band === 'fiveup' ? 'bg-info' : ''">
                     {{ result.fiveup }}
                 </td>
-                <td>
+                <td :class="band === 'sixup' ? 'bg-info' : ''">
                     {{ result.sixup }}
                 </td>
                 <td>
@@ -68,16 +68,16 @@
                 <td>
                     {{ result.twodown }}
                 </td>
-                <td>
+                <td :class="band === 'threeup' ? 'bg-info' : ''">
                     {{ result.threedown }}
                 </td>
-                <td>
+                <td :class="band === 'fourup' ? 'bg-info' : ''">
                     {{ result.fourdown }}
                 </td>
-                <td>
+                <td :class="band === 'fiveup' ? 'bg-info' : ''">
                     {{ result.fivedown }}
                 </td>
-                <td>
+                <td :class="band === 'sixup' ? 'bg-info' : ''">
                     {{ result.sixdown }}
                 </td>
                 <td>

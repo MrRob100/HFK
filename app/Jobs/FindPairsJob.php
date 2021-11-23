@@ -13,7 +13,6 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Log;
 
 //class FindPairsJob
 class FindPairsJob implements ShouldQueue
@@ -49,8 +48,8 @@ class FindPairsJob implements ShouldQueue
                 && !strpos($value->symbol, 'BULL') !== false
                 && !strpos($value->symbol, 'BEAR') !== false
                 && strpos($value->symbol, 'USDT') !== false
-                && strpos($value->symbol, 'O') !== false //to slim down while testing
-                && strpos($value->symbol, 'S') !== false //to slim down while testing
+//                && strpos($value->symbol, 'O') !== false //to slim down while testing
+//                && strpos($value->symbol, 'S') !== false //to slim down while testing
             ) {
                 return $value;
             }
@@ -292,7 +291,7 @@ class FindPairsJob implements ShouldQueue
         $s1 = str_replace('USDT', '', $symbol1);
         $s2 = str_replace('USDT', '', $symbol2);
 
-        if (Result::where('symbol1', $s1)->where('symbol2', $s2)->where('candle_type', $candleType)->isEmpty()) {
+        if (Result::where('symbol1', $s1)->where('symbol2', $s2)->where('candle_type', $candleType)->get()->isEmpty()) {
 
             Result::create([
                 'symbol1' => $s1,
