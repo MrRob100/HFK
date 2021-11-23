@@ -2,9 +2,10 @@
 
 namespace App\Jobs;
 
-use App\Models\Candle;
 use App\Models\Message;
 use App\Models\Result;
+use App\Models\Truth;
+use App\Services\FormatPairService;
 use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -21,9 +22,12 @@ class FindPairsJob
 
     protected $candleType;
 
-    public function __construct(string $candleType)
+    protected $formatPairsService;
+
+    public function __construct(string $candleType, FormatPairService $formatPairsService)
     {
         $this->candleType = $candleType;
+        $this->formatPairsService = $formatPairsService;
     }
 
     public function handle()
@@ -55,12 +59,12 @@ class FindPairsJob
         $checked = 0;
 //        foreach ($filtered->toArray() as $symbolOuter) {
 //
-//            $dataOuter = $this->getCandlesData($symbolOuter->symbol, $this->candleType);
+//            $dataOuter = $this->formatPairService->getCandlesData($symbolOuter->symbol, $this->candleType);
 //
 //            foreach ($filtered->toArray() as $symbolInner) {
 //
 //                if ($symbolOuter->symbol !== $symbolInner->symbol) {
-//                    $dataInner = $this->getCandlesData($symbolInner->symbol, $this->candleType);
+//                    $dataInner = $this->formatPairService->getCandlesData($symbolInner->symbol, $this->candleType);
 //
 //                    $pairData = $this->createPairData($dataOuter, $dataInner);
 //
@@ -100,181 +104,213 @@ class FindPairsJob
 //        }
 
         //get akronuls
-        $akro = $this->getCandlesData('AKROUSDT', $this->candleType);
-        $nuls = $this->getCandlesData('NULSUSDT', $this->candleType);
+        $akro = $this->formatPairsService->getCandlesData('AKROUSDT', $this->candleType);
+        $nuls = $this->formatPairsService->getCandlesData('NULSUSDT', $this->candleType);
 
-        $akronuls = $this->createPairData($akro, $nuls, true);
+        $akronuls = $this->formatPairsService->createPairData($akro, $nuls);
 
         $akronuls_result = $this->performCalcs($akronuls, $this->candleType, 'AKROUSDT', 'NULSUSDT');
     }
 
-    public function getCandlesData($symbol, $candleType): array
-    {
-        //create file if doesnt exist
-        $fileName = public_path() . '/data/' . $candleType . '/' . $symbol . '.json';
-        if (file_exists($fileName)) {
-            $candles = file_get_contents($fileName);
-        } else {
-            if ($candleType === "1h") {
-                $startTime = Carbon::now()->subMonth()->unix() * 1000;
-            } else {
-                //should be 1d
-                $startTime = Carbon::now()->subMonths(4)->unix() * 1000;
-            }
-
-            $candles = file_get_contents("https://www.binance.com/api/v3/klines?symbol={$symbol}&interval={$this->candleType}&startTime=$startTime");
-            file_put_contents($fileName, $candles);
-        }
-
-        return json_decode($candles, true);
-    }
-
     public function performCalcs($pairData, $candleType, $symbol1, $symbol2)
     {
-        $candleAves = [];
-        $pureAves = [];
-        $totalAves = 0;
+        //first we want to truth it
+        //then we want to give it a score
+
+        // IMPLEMENT THIS
+        //n is period - make it 25
+
+        $period = 25;
+
+        //EMA = (Close - previous EMA) * (2 / n+1) + previous EMA
+
+        //set all in [] then loop through those again to calc dists from MA etc
+
         $i = 0;
+        $calced = [];
+        $middles = 0;
+        $oneup = 0;
+        $twoup = 0;
+        $threeup = 0;
+        $fourup = 0;
+        $fiveup = 0;
+        $sixup = 0;
+        $sevenup = 0;
+        $eightup = 0;
+        $nineup = 0;
+        $tenup = 0;
+
+        $onedown = 0;
+        $twodown = 0;
+        $threedown = 0;
+        $fourdown = 0;
+        $fivedown = 0;
+        $sixdown = 0;
+        $sevendown = 0;
+        $eightdown = 0;
+        $ninedown = 0;
+        $tendown = 0;
+
         foreach ($pairData as $item) {
-            $collection = collect($item);
+            if ($i === 0) {
 
-            $first_key = $collection->keys()->first();
+                $ema = $item[4];
 
-            $ma10 = null;
-            if ($i >= 10) {
-                $tot = $pairData[$i - 9][4] +
-                    $pairData[$i - 8][4] +
-                    $pairData[$i - 7][4] +
-                    $pairData[$i - 6][4] +
-                    $pairData[$i - 5][4] +
-                    $pairData[$i - 4][4] +
-                    $pairData[$i - 3][4] +
-                    $pairData[$i - 2][4] +
-                    $pairData[$i - 1][4] +
-                    $pairData[$i][4];
+                $calced[] = [
+                    'o' => $item[1],
+                    'h' => $item[2],
+                    'l' => $item[3],
+                    'c' => $item[4],
+                    'ema' => $ema,
+                ];
+            } else {
+                $previousMA = $calced[$i - 1]['ema'];
 
-                $ma10 = $tot / 10;
-            }
+                $ema = ($item[4] - $previousMA) * (2 / ($period + 1)) + $previousMA;
 
-            $candleAve = ($item[1] + $item[4]) / 2;
-            $candleAves[] = [
-                'time' => $item[0],
-                'o' => $item[1],
-                'h' => $item[2],
-                'l' => $item[3],
-                'c' => $item[4],
-                'candleAve' => $candleAve,
-                'ma' => $ma10,
-            ];
+                $calced[] = [
+                    'o' => $item[1],
+                    'h' => $item[2],
+                    'l' => $item[3],
+                    'c' => $item[4],
+                    'ema' => $ema,
+                ];
 
-            array_push($pureAves, $candleAve);
-            $totalAves += $candleAve;
+                $oneperc = $ema * 0.01;
+                $twoperc = $ema * 0.02;
+                $threeperc = $ema * 0.03;
+                $fourperc = $ema * 0.04;
+                $fiveperc = $ema * 0.05;
+                $sixperc = $ema * 0.06;
+                $sevenperc = $ema * 0.07;
+                $eightperc = $ema * 0.08;
+                $nineperc = $ema * 0.09;
+                $tenperc = $ema * 0.1;
 
-            if ($symbol1 === 'AKROUSDT' && $symbol2 === 'NULSUSDT') {
+                $close = $item[4];
 
-                $candles = Candle::whereUnix($item[0])->wherePair('akronuls')->get();
-
-                if ($candles->isEmpty()) {
-                    Candle::create(
-                        [
-                            'pair' => 'akronuls',
-                            'unix' => $item[0],
-                            'o' => $item[1],
-                            'h' => $item[2],
-                            'l' => $item[3],
-                            'c' => $item[4],
-                            'ave' => $ma10,
-                        ]
-                    );
+                //middle
+                if ($close < ($ema + $oneperc) && $close > ($ema - $oneperc)) {
+                    $middles++;
                 }
+
+                //ups
+                if ($close > ($ema + $oneperc) && $close < ($ema + $twoperc)) {
+                    $oneup++;
+                }
+                if ($close > ($ema + $twoperc) && $close < ($ema + $threeperc)) {
+                    $twoup++;
+                }
+                if ($close > ($ema + $threeperc) && $close < ($ema + $fourperc)) {
+                    $threeup++;
+                }
+                if ($close > ($ema + $fourperc) && $close < ($ema + $fiveperc)) {
+                    $fourup++;
+                }
+                if ($close > ($ema + $fiveperc) && $close < ($ema + $sixperc)) {
+                    $fiveup++;
+                }
+                if ($close > ($ema + $sixperc) && $close < ($ema + $sevenperc)) {
+                    $sevenup++;
+                }
+                if ($close > ($ema + $sevenperc) && $close < ($ema + $eightperc)) {
+                    $eightup++;
+                }
+                if ($close > ($ema + $eightperc) && $close < ($ema + $nineperc)) {
+                    $nineup++;
+                }
+
+                if ($close > ($ema + $tenperc)) {
+                    $tenup++;
+                }
+
+                //downs
+                if ($close < ($ema - $oneperc) && $close > ($ema - $twoperc)) {
+                    $onedown++;
+                }
+
+                if ($close < ($ema - $twoperc) && $close > ($ema - $threeperc)) {
+                    $twodown++;
+                }
+                if ($close < ($ema - $threeperc) && $close > ($ema - $fourperc)) {
+                    $threedown++;
+                }
+                if ($close < ($ema - $fourperc) && $close > ($ema - $fiveperc)) {
+                    $fourdown++;
+                }
+                if ($close < ($ema - $fiveperc) && $close > ($ema - $sixperc)) {
+                    $fivedown++;
+                }
+                if ($close < ($ema - $sixperc) && $close > ($ema - $sevenperc)) {
+                    $sixdown++;
+                }
+                if ($close < ($ema - $sevenperc) && $close > ($ema - $eightperc)) {
+                    $sevendown++;
+                }
+                if ($close < ($ema - $eightperc) && $close > ($ema - $nineperc)) {
+                    $eightdown++;
+                }
+                if ($close < ($ema - $nineperc) && $close > ($ema - $tenperc)) {
+                    $ninedown++;
+                }
+                if ($close < ($ema - $tenperc)) {
+                    $tendown++;
+                }
+
+//                dump($close);
+//                dump($ema);
+//                dump($ema + $oneperc);
+//                dump($ema + $twoperc);
+//                die();
             }
+
+            $truth = Truth::whereUnix($item[0])->wherePair('akronuls')->get();
+
+            if ($truth->isEmpty() && $symbol1 === 'AKROUSDT' && $symbol2 === 'NULSUSDT') {
+                Truth::create(
+                    [
+                        'pair' => 'akronuls',
+                        'unix' => $item[0],
+                        'o' => $item[1],
+                        'h' => $item[2],
+                        'l' => $item[3],
+                        'c' => $item[4],
+                        'ema' => $ema,
+                    ]
+                );
+            }
+
             $i++;
         }
 
-
-        //MAKE MOVING AVERAGE AGAIN
-
-        $ave = $totalAves / sizeof($pairData);
-
-        $thresh = env('THRESH');
-
-        $countAbove = 0;
-        $countBelow = 0;
-        $countMiddle = 0;
-        $uppers = [];
-        $lowers = [];
-        foreach ($pureAves as $pureAve) {
-            if ($pureAve > $ave) {
-                //above
-                $threshUpper = $ave + ($ave * $thresh);
-                if ($pureAve > $threshUpper) {
-                    $countAbove ++;
-                    $uppers[] = $pureAve;
-                } else {
-                    $countMiddle ++;
-                }
-            } else {
-                //below
-                $threshLower = $ave - ($ave * $thresh);
-                if ($pureAve < $threshLower) {
-                    $countBelow ++;
-                    $lowers[] = $pureAve;
-                } else {
-                    $countMiddle ++;
-                }
-            }
-        }
-
-//        $pureAves;
-
-//        $sd = stats_standard_deviation(collect($candleAves)->pluck('candleAve'));
-
-        $sdAbove = $this->standardDeviation($uppers);
-        $sdBelow = $this->standardDeviation($lowers);
-
         Result::create([
-            'symbol1' => str_replace('USDT', '', $symbol1),
-            'symbol2' => str_replace('USDT', '', $symbol2),
+            'symbol1' => $symbol1,
+            'symbol2' => $symbol2,
             'candle_type' => $candleType,
-            'count_above' => $countAbove,
-            'count_below' => $countBelow,
-            'count_middle' => $countMiddle,
-            'sd_above' => $sdAbove,
-            'sd_below' => $sdBelow,
-            'ave' => $ave,
+            'middles' => $middles,
+            'oneup' => $oneup,
+            'twoup' => $twoup,
+            'threeup' => $threeup,
+            'fourup' => $fourup,
+            'fiveup' => $fiveup,
+            'sixup' => $sixup,
+            'sevenup' => $sevenup,
+            'eightup' => $eightup,
+            'nineup' => $nineup,
+            'tenup' => $tenup,
+            'onedown' => $onedown,
+            'twodown' => $twodown,
+            'threedown' => $threedown,
+            'fourdown' => $fourdown,
+            'fivedown' => $fivedown,
+            'sixdown' => $sixdown,
+            'sevendown' => $sevendown,
+            'eightdown' => $eightdown,
+            'ninedown' => $ninedown,
+            'tendown' => $tendown,
         ]);
 
         return [];
-    }
-
-    public function createPairData($data1, $data2): array
-    {
-        $size_max = max(sizeof($data1), sizeof($data2) - 1);
-        $size_min = min(sizeof($data1), sizeof($data2) - 1);
-
-        $pair = [];
-        for($i=0; $i<$size_max; $i++) {
-
-            if ($i < $size_min) {
-
-                $unix = $data1[$i][0];
-                $o = $data1[$i][1] / $data2[$i][1];
-                $h = $data1[$i][2] / $data2[$i][2];
-                $l = $data1[$i][3] / $data2[$i][3];
-                $c = $data1[$i][4] / $data2[$i][4];
-
-                $pair[] = [
-                    $unix,
-                    $o,
-                    $h,
-                    $l,
-                    $c,
-//                $response1[$i][5], // volume
-                ];
-            }
-        }
-
-        return $pair;
     }
 
     public function standardDeviation($arr)

@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Candle extends Model
+class Truth extends Model
 {
     use HasFactory;
 
@@ -16,6 +16,6 @@ class Candle extends Model
         'h',
         'l',
         'c',
-        'ave',
+        'ema',
     ];
 }

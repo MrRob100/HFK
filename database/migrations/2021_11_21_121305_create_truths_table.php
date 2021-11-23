@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateCandlesTable extends Migration
+class CreateTruthsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,7 +13,7 @@ class CreateCandlesTable extends Migration
      */
     public function up()
     {
-        Schema::create('candles', function (Blueprint $table) {
+        Schema::create('truths', function (Blueprint $table) {
             $table->id();
             $table->string('pair');
             $table->string('unix');
@@ -21,7 +21,7 @@ class CreateCandlesTable extends Migration
             $table->string('h');
             $table->string('l');
             $table->string('c');
-            $table->string('ave')->nullable();
+            $table->string('ema');
             $table->timestamps();
         });
     }
@@ -33,6 +33,6 @@ class CreateCandlesTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('data');
+        Schema::dropIfExists('truths');
     }
 }

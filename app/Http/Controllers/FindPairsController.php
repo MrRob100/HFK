@@ -3,13 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Jobs\FindPairsJob;
-use App\Models\Result;
+use App\Services\FormatPairService;
 use Illuminate\Http\Request;
 
 class FindPairsController extends Controller
 {
-    public function findPairs(Request $request)
+    protected $formatPairsService;
+
+    public function findPairs(Request $request, FormatPairService $formatPairService)
     {
-        FindPairsJob::dispatch($request->candleType);
+        $this->formatPairsService = $formatPairService;
+
+        FindPairsJob::dispatch($request->candleType, $formatPairService);
     }
 }

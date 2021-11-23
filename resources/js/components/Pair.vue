@@ -66,13 +66,18 @@ export default {
                 },
                 onchart: [
                     {
-                        name: 'EMA, 10',
+                        name: 'EMA',
                         type: 'EMA',
                         data: [],
-                        settings: {
-                            length: 10
-                        }
                     },
+                    // {
+                    //     name: 'EMA, 10',
+                    //     type: 'EMA',
+                    //     data: [],
+                    //     settings: {
+                    //         length: 10
+                    //     }
+                    // },
                     {
                         name: 'EMA, 25',
                         type: 'EMA',

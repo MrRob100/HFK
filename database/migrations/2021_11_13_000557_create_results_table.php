@@ -13,17 +13,34 @@ class CreateResultsTable extends Migration
      */
     public function up()
     {
+
+
         Schema::create('results', function (Blueprint $table) {
             $table->id();
             $table->string('symbol1');
             $table->string('symbol2');
             $table->string('candle_type');
-            $table->integer('count_above');
-            $table->integer('count_below');
-            $table->integer('count_middle')->nullable();
-            $table->string('sd_above')->nullable();
-            $table->string('sd_below')->nullable();
-            $table->string('ave')->nullable();
+            $table->integer('middles');
+            $table->integer('oneup');
+            $table->integer('twoup');
+            $table->integer('threeup');
+            $table->integer('fourup');
+            $table->integer('fiveup');
+            $table->integer('sixup');
+            $table->integer('sevenup');
+            $table->integer('eightup');
+            $table->integer('nineup');
+            $table->integer('tenup');
+            $table->integer('onedown');
+            $table->integer('twodown');
+            $table->integer('threedown');
+            $table->integer('fourdown');
+            $table->integer('fivedown');
+            $table->integer('sixdown');
+            $table->integer('sevendown');
+            $table->integer('eightdown');
+            $table->integer('ninedown');
+            $table->integer('tendown');
             $table->timestamps();
         });
     }

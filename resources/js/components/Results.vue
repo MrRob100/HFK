@@ -57,7 +57,7 @@ export default {
     },
 
     mounted() {
-        this.getResults();
+        // this.getResults();
     },
 
     methods: {

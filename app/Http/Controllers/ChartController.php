@@ -3,16 +3,19 @@
 namespace App\Http\Controllers;
 
 use App\Services\BinanceGetService;
+use App\Services\FormatPairService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 
 class ChartController extends Controller
 {
     public $binanceGetService;
+    public $formatPairService;
 
-    public function __construct(BinanceGetService $binanceGetService)
+    public function __construct(BinanceGetService $binanceGetService, FormatPairService $formatPairService)
     {
         $this->binanceGetService = $binanceGetService;
+        $this->formatPairService = $formatPairService;
     }
 
     public function data(Request $request): array
@@ -33,24 +36,26 @@ class ChartController extends Controller
         $response1 = $this->binanceGetService->apiCall($request->s1, $request->candleType);
         $response2 = $this->binanceGetService->apiCall($request->s2, $request->candleType);
 
-        $size_max = max(sizeof($response1), sizeof($response2) - 1);
-        $size_min = min(sizeof($response1), sizeof($response2) - 1);
+        $pair = $this->formatPairService->createPairData($response1, $response2);
 
-        $pair = [];
-        for($i=0; $i<$size_max; $i++) {
-
-            if ($i < $size_min) {
-
-                $pair[] = [
-                    $response1[$i][0], //timestamp
-                    $response1[$i][1] / $response2[$i][1],
-                    $response1[$i][2] / $response2[$i][2],
-                    $response1[$i][3] / $response2[$i][3],
-                    $response1[$i][4] / $response2[$i][4],
-//                $response1[$i][5], // volume
-                ];
-            }
-        }
+//        $size_max = max(sizeof($response1), sizeof($response2) - 1);
+//        $size_min = min(sizeof($response1), sizeof($response2) - 1);
+//
+//        $pair = [];
+//        for($i=0; $i<$size_max; $i++) {
+//
+//            if ($i < $size_min) {
+//
+//                $pair[] = [
+//                    $response1[$i][0], //timestamp
+//                    $response1[$i][1] / $response2[$i][1],
+//                    $response1[$i][2] / $response2[$i][2],
+//                    $response1[$i][3] / $response2[$i][3],
+//                    $response1[$i][4] / $response2[$i][4],
+////                $response1[$i][5], // volume
+//                ];
+//            }
+//        }
 
         return [
             'first' => $this->formatBinanceResponse($response1),

@@ -2130,13 +2130,18 @@ __webpack_require__.r(__webpack_exports__);
           data: []
         },
         onchart: [{
-          name: 'EMA, 10',
+          name: 'EMA',
           type: 'EMA',
-          data: [],
-          settings: {
-            length: 10
-          }
-        }, {
+          data: []
+        }, // {
+        //     name: 'EMA, 10',
+        //     type: 'EMA',
+        //     data: [],
+        //     settings: {
+        //         length: 10
+        //     }
+        // },
+        {
           name: 'EMA, 25',
           type: 'EMA',
           data: [],
@@ -2473,8 +2478,7 @@ __webpack_require__.r(__webpack_exports__);
       results: []
     };
   },
-  mounted: function mounted() {
-    this.getResults();
+  mounted: function mounted() {// this.getResults();
   },
   methods: {
     getResults: function getResults() {
