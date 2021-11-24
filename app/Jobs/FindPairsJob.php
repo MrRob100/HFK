@@ -44,12 +44,15 @@ class FindPairsJob implements ShouldQueue
             //better way of slimming down results to test
 
             if (
-                !strpos($value->symbol, 'DOWN') !== false
-                && !strpos($value->symbol, 'BULL') !== false
-                && !strpos($value->symbol, 'BEAR') !== false
-                && strpos($value->symbol, 'USDT') !== false
+                !str_contains($value->symbol, 'DOWN')
+                && !str_contains($value->symbol, 'BULL')
+                && !str_contains($value->symbol, 'BEAR')
+                && !str_contains($value->symbol, 'BTC')
+                && !str_contains($value->symbol, 'ETH')
+                && !str_contains($value->symbol, 'DOGE')
+                && !str_contains($value->symbol, 'MITH')
+                && str_contains($value->symbol, 'USDT')
 //                && strpos($value->symbol, 'O') !== false //to slim down while testing
-//                && strpos($value->symbol, 'S') !== false //to slim down while testing
             ) {
                 return $value;
             }
@@ -63,40 +66,60 @@ class FindPairsJob implements ShouldQueue
             foreach ($filtered->toArray() as $symbolInner) {
 
                 if ($symbolOuter->symbol !== $symbolInner->symbol) {
-                    $dataInner = $this->formatPairsService->getCandlesData($symbolInner->symbol, $this->candleType);
 
-                    $pairData = $this->formatPairsService->createPairData($dataOuter, $dataInner);
+                    $symbols = [
+                        's1' => str_replace('USDT', '', $symbolOuter->symbol),
+                        's2' => str_replace('USDT', '', $symbolInner->symbol),
+                    ];
 
-                    if (sizeof($pairData) > 90) {
-                        $results = $this->performCalcs($pairData, $this->candleType, $symbolInner->symbol, $symbolOuter->symbol);
-                    }
+                    if (Result::where(
+                        function ($query) use ($symbols) {
+                            $query->where('symbol1', $symbols['s1'])
+                                ->where('symbol2', $symbols['s2']);
+                        }
+                    )->orWhere(
+                        function ($query) use ($symbols) {
+                            $query->where('symbol1', $symbols['s2'])
+                                ->where('symbol2', $symbols['s1']);
+                        }
+                    )->where('candle_type', $this->candleType)
+                        ->get()->isEmpty()) {
 
-                    $total = $filtered->count() * $filtered->count();
+                        $dataInner = $this->formatPairsService->getCandlesData($symbolInner->symbol, $this->candleType);
 
-                    $checked++;
-                    if ($checked % 100 === 0) {
+                        $pairData = $this->formatPairsService->createPairData($dataOuter, $dataInner);
 
-                        Message::updateOrCreate(
-                            [
-                                'type' => 'pair_check',
-                            ],
-                            [
-                                'message' => "checked $checked out of $total ($symbolOuter->symbol X $symbolInner->symbol)",
-                                'type' => 'pair_check',
-                            ]
-                        );
-                    }
+                        if (sizeof($pairData) > 90) {
+                            $results = $this->performCalcs($pairData, $this->candleType, $symbolInner->symbol, $symbolOuter->symbol);
+                        }
 
-                    if ($checked === $total - 1) {
-                        Message::updateOrCreate(
-                            [
-                                'type' => 'pair_check',
-                            ],
-                            [
-                                'message' => "checked all $total pairs",
-                                'type' => 'pair_check',
-                            ]
-                        );
+                        $total = $filtered->count() * $filtered->count();
+
+                        $checked++;
+                        if ($checked % 100 === 0) {
+
+                            Message::updateOrCreate(
+                                [
+                                    'type' => 'pair_check',
+                                ],
+                                [
+                                    'message' => "checked $checked out of $total ($symbolOuter->symbol X $symbolInner->symbol)",
+                                    'type' => 'pair_check',
+                                ]
+                            );
+                        }
+
+                        if ($checked === $total - 1) {
+                            Message::updateOrCreate(
+                                [
+                                    'type' => 'pair_check',
+                                ],
+                                [
+                                    'message' => "checked all $total pairs",
+                                    'type' => 'pair_check',
+                                ]
+                            );
+                        }
                     }
                 }
             }
@@ -213,12 +236,15 @@ class FindPairsJob implements ShouldQueue
                     $fiveup++;
                 }
                 if ($close > ($ema + $sixperc) && $close < ($ema + $sevenperc)) {
-                    $sevenup++;
+                    $sixup++;
                 }
                 if ($close > ($ema + $sevenperc) && $close < ($ema + $eightperc)) {
-                    $eightup++;
+                    $sevenup++;
                 }
                 if ($close > ($ema + $eightperc) && $close < ($ema + $nineperc)) {
+                    $eightup++;
+                }
+                if ($close > ($ema + $nineperc) && $close < ($ema + $tenperc)) {
                     $nineup++;
                 }
 
@@ -291,8 +317,6 @@ class FindPairsJob implements ShouldQueue
         $s1 = str_replace('USDT', '', $symbol1);
         $s2 = str_replace('USDT', '', $symbol2);
 
-        if (Result::where('symbol1', $s1)->where('symbol2', $s2)->where('candle_type', $candleType)->get()->isEmpty()) {
-
             Result::create([
                 'symbol1' => $s1,
                 'symbol2' => $s2,
@@ -323,7 +347,6 @@ class FindPairsJob implements ShouldQueue
                 'upneighbours' => $upneighbours,
                 'downneighbours' => $downneighbours,
             ]);
-        }
 
         return [];
     }

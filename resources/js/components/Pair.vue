@@ -12,7 +12,6 @@
         </div>
         <div class="col-4">
             <trading-vue
-                :colorWickUp="lineDataPair ? JSON.stringify(lineDataPair) : null"
                 :indexBased="true"
                 style="z-index: -1"
                 colorText="#7DA0B1"
