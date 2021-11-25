@@ -46,10 +46,10 @@
                     <div class="col-3 mr-0 pr-0">
                         <input type="text" :value="v2.toUpperCase()" @input="v2 = $event.target.value.toUpperCase()" class="form-control">
                     </div>
-
                 </div>
                 <br>
                 <button @click="go" class="btn btn-sml btn-success">go</button>
+                <button @click="add" class="btn btn-success"><i class="fa fa-plus"></i></button>
             </div>
         </div>
 
