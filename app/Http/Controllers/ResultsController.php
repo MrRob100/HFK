@@ -24,23 +24,23 @@ class ResultsController extends Controller
                 ->where(DB::raw('convert(upneighbours - downneighbours, UNSIGNED)'), '<', 10);
 
             if ($request->band !== 'threeup') {
-                $query = $query->where($request->band, '>', 'threeup');
-                $query = $query->where($corresp_down, '>', 'threedown');
+                $query = $query->whereRaw($request->band . ' > threeup');
+                $query = $query->whereRaw($corresp_down . ' > threedown');
             }
 
             if ($request->band !== 'fourup') {
-                $query = $query->where($request->band, '>', 'fourup');
-                $query = $query->where($corresp_down, '>', 'fourdown');
+                $query = $query->whereRaw($request->band . ' > fourup');
+                $query = $query->whereRaw($corresp_down . ' > fourdown');
             }
 
             if ($request->band !== 'fiveup') {
-                $query = $query->where($request->band, '>', 'fiveup');
-                $query = $query->where($corresp_down, '>', 'fivedown');
+                $query = $query->whereRaw($request->band . ' > fiveup');
+                $query = $query->whereRaw($corresp_down . ' > fivedown');
             }
 
             if ($request->band !== 'sixup') {
-                $query = $query->where($request->band, '>', 'sixup');
-                $query = $query->where($corresp_down, '>', 'sixdown');
+                $query = $query->whereRaw($request->band . ' > sixup');
+                $query = $query->whereRaw($corresp_down . ' > sixdown');
             }
 
             $result = $query->paginate(20);

@@ -24,7 +24,7 @@
             <th></th>
             </thead>
             <tbody>
-            <tr v-for="result in results.data">
+            <tr v-for="(result, index) in results.data" :id="'row_' + index">
                 <td>
                     {{ result.symbol1 }}
                     {{ result.symbol2 }}
@@ -84,7 +84,7 @@
                     {{ result.tendown }}
                 </td>
                 <td>
-                    <button class="btn btn-success btn-sm" @click="showResult(result.symbol1, result.symbol2)">Show</button>
+                    <button class="btn btn-success btn-sm" @click="showResult(result.symbol1, result.symbol2, index)">Show</button>
                 </td>
             </tr>
             </tbody>
@@ -101,6 +101,7 @@ export default {
         return {
             results: [],
             band: null,
+            index: null,
         };
     },
 
@@ -120,7 +121,14 @@ export default {
                 this.results = response.data;
             });
         },
-        showResult: function(symbol1, symbol2) {
+        showResult: function(symbol1, symbol2, index) {
+
+            this.index = index;
+
+            let row = document.getElementById('row_' + index);
+
+            row.style.backgroundColor = "#777";
+
             this.$emit('show', symbol1, symbol2);
         }
     },
@@ -128,7 +136,13 @@ export default {
     watch: {
         candleType: function() {
             this.getResults();
-        }
+        },
+        index: function(newVal, oldVal) {
+            if (oldVal || oldVal == 0) {
+                let row = document.getElementById('row_' + oldVal);
+                row.style.backgroundColor = "initial";
+            }
+        },
     }
 }
 
