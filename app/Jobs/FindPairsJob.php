@@ -41,8 +41,6 @@ class FindPairsJob implements ShouldQueue
 
         $filtered = $data->filter(function ($value, $key) {
 
-            //better way of slimming down results to test
-
             if (
                 !str_contains($value->symbol, 'DOWN')
                 && !str_contains($value->symbol, 'BULL')
@@ -51,6 +49,7 @@ class FindPairsJob implements ShouldQueue
                 && !str_contains($value->symbol, 'ETH')
                 && !str_contains($value->symbol, 'DOGE')
                 && !str_contains($value->symbol, 'MITH')
+                && !str_contains($value->symbol, 'EUR')
                 && str_contains($value->symbol, 'USDT')
 //                && strpos($value->symbol, 'O') !== false //to slim down while testing
             ) {
@@ -143,6 +142,7 @@ class FindPairsJob implements ShouldQueue
         //n is period - make it 25
 
         $period = 25;
+        $long_period = 50;
 
         //EMA = (Close - previous EMA) * (2 / n+1) + previous EMA
 
@@ -176,6 +176,8 @@ class FindPairsJob implements ShouldQueue
         $ninedown = 0;
         $tendown = 0;
 
+        $usn = 0;
+
         foreach ($pairData as $item) {
             if ($i === 0) {
 
@@ -187,11 +189,15 @@ class FindPairsJob implements ShouldQueue
                     'l' => $item[3],
                     'c' => $item[4],
                     'ema' => $ema,
+                    'ema_long' => $ema,
                 ];
             } else {
                 $previousMA = $calced[$i - 1]['ema'];
+                $previousMALong = $calced[$i - 1]['ema_long'];
 
                 $ema = ($item[4] - $previousMA) * (2 / ($period + 1)) + $previousMA;
+
+                $ema_long = ($item[4] - $previousMALong) * (2 / ($long_period + 1)) + $previousMALong;
 
                 $calced[] = [
                     'o' => $item[1],
@@ -199,6 +205,7 @@ class FindPairsJob implements ShouldQueue
                     'l' => $item[3],
                     'c' => $item[4],
                     'ema' => $ema,
+                    'ema_long' => $ema_long,
                 ];
 
                 $oneperc = $ema * 0.01;
@@ -286,13 +293,36 @@ class FindPairsJob implements ShouldQueue
                 }
 
                 //up & down neighbours
-                if ($close > $ema && $pairData[$i -1][4] > $previousMA) {
-                    $upneighbours++;
+                if (isset($pairData[$i - 3])) {
+                    if (
+                        $close > $ema
+                        && $pairData[$i - 1][4] > $previousMA
+                        && $pairData[$i - 2][4] > $calced[$i - 2]['ema']
+                        && $pairData[$i - 3][4] > $calced[$i - 3]['ema']
+                    )
+                    {
+                        $upneighbours++;
+                    }
+
+                    if (
+                        $close < $ema
+                        && $pairData[$i - 1][4] < $previousMA
+                        && $pairData[$i - 2][4] < $calced[$i - 2]['ema']
+                        && $pairData[$i - 3][4] < $calced[$i - 3]['ema']
+                    )
+                    {
+                        $downneighbours++;
+                    }
                 }
 
-                if ($close < $ema && $pairData[$i -1][4] < $previousMA) {
-                    $downneighbours++;
+                //un-straight-ness (usn)
+                $diff = $ema - $ema_long;
+                if ($diff < 0) {
+                    $unsigned_diff = -$diff;
+                } else {
+                    $unsigned_diff = $diff;
                 }
+                $usn += floor(($unsigned_diff / $ema_long) * 100);
             }
 
             $truth = Truth::whereUnix($item[0])->wherePair('akronuls')->get();
@@ -346,6 +376,7 @@ class FindPairsJob implements ShouldQueue
                 'tendown' => $tendown,
                 'upneighbours' => $upneighbours,
                 'downneighbours' => $downneighbours,
+                'usn' => $usn,
             ]);
 
         return [];

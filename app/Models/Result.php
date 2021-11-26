@@ -38,5 +38,6 @@ class Result extends Model
         'tendown',
         'upneighbours',
         'downneighbours',
+        'usn',
     ];
 }

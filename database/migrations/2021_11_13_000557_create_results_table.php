@@ -43,6 +43,7 @@ class CreateResultsTable extends Migration
             $table->integer('tendown');
             $table->integer('upneighbours');
             $table->integer('downneighbours');
+            $table->integer('usn');
             $table->timestamps();
         });
     }

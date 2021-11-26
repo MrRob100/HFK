@@ -19,9 +19,9 @@ class ResultsController extends Controller
             $corresp_down = str_replace('up', '', $request->band . 'down');
 
             $query = Result::where('candle_type', $request->candleType)
-                ->orderBy($request->band, 'DESC')
-                ->where($corresp_down, '>', 5)
-                ->where(DB::raw('convert(upneighbours - downneighbours, UNSIGNED)'), '<', 10);
+//                ->orderBy($request->band, 'DESC')
+                ->where($corresp_down, '>', 5);
+//                ->where(DB::raw('convert(upneighbours - downneighbours, UNSIGNED)'), '<', 10);
 
             if ($request->band !== 'threeup') {
                 $query = $query->whereRaw($request->band . ' > threeup');
@@ -45,7 +45,7 @@ class ResultsController extends Controller
 
             $result = $query->paginate(20);
         } else {
-            $result = Result::where('candle_type', $request->candleType)->paginate(10);
+            $result = Result::where('candle_type', $request->candleType)->orderBy('usn')->paginate(10);
         }
 
         return $result;
