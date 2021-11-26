@@ -45,7 +45,7 @@ class ResultsController extends Controller
 
             $result = $query->paginate(20);
         } else {
-            $result = Result::where('candle_type', $request->candleType)->orderBy('usn')->paginate(10);
+            $result = Result::where('candle_type', $request->candleType)->orderBy('usn')->paginate(20);
         }
 
         return $result;

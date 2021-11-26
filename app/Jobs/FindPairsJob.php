@@ -50,6 +50,10 @@ class FindPairsJob implements ShouldQueue
                 && !str_contains($value->symbol, 'DOGE')
                 && !str_contains($value->symbol, 'MITH')
                 && !str_contains($value->symbol, 'EUR')
+                && !str_contains($value->symbol, 'GBP')
+                && !str_contains($value->symbol, 'USDC')
+                && !str_contains($value->symbol, 'TUSD')
+                && !str_contains($value->symbol, 'BUSD')
                 && str_contains($value->symbol, 'USDT')
 //                && strpos($value->symbol, 'O') !== false //to slim down while testing
             ) {
