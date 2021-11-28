@@ -137,6 +137,9 @@ export default {
     },
 
     watch: {
+        candleType: function() {
+            this.getData(this.symbols[0].name, this.symbols[1].name, this.type, this.candleType);
+        },
         symbols: function(val) {
             if (val.length == 2) {
                 this.getData(val[0].name, val[1].name, this.type, this.candleType);

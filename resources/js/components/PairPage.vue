@@ -69,6 +69,7 @@
 <!--                :value="value"-->
 <!--                :push-lasts="pushLasts">-->
 <!--            </pair-record>-->
+            <br>
             <results
                 :candleType="candleType"
                 @show="show"

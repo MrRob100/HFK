@@ -1,27 +1,12 @@
 <template>
     <div class="container">
+        <input class="form-control col-3" type="text" v-model="frozen" placeholder="frozen coin">
+        <br>
         <table class="table table-responsive table-striped table-sm">
             <thead>
             <th>Pair</th>
             <th>Candle Type</th>
-            <th>USN</th>
-            <th>Mids</th>
-            <th>Uns</th>
-            <th>Dns</th>
-            <th>1<i class="fas fa-arrow-up"></i></th>
-            <th>2<i class="fas fa-arrow-up"></i></th>
-            <th><button :class="band === 'threeup' ? 'bg-info' : 'bg-light'" @click="getResults('threeup')">3<i class="fas fa-arrow-up"></i></button></th>
-            <th><button :class="band === 'fourup' ? 'bg-info' : 'bg-light'" @click="getResults('fourup')">4<i class="fas fa-arrow-up"></i></button></th>
-            <th><button :class="band === 'fiveeup' ? 'bg-info' : 'bg-light'" @click="getResults('fiveup')">5<i class="fas fa-arrow-up"></i></button></th>
-            <th><button :class="band === 'sixup' ? 'bg-info' : 'bg-light'" @click="getResults('sixup')">6<i class="fas fa-arrow-up"></i></button></th>
-            <th>10<i class="fas fa-arrow-up"></i></th>
-            <th>1<i class="fas fa-arrow-down"></i></th>
-            <th>2<i class="fas fa-arrow-down"></i></th>
-            <th :class="band === 'threeup' ? 'bg-info' : ''">3<i class="fas fa-arrow-down"></i></th>
-            <th :class="band === 'fourup' ? 'bg-info' : ''">4<i class="fas fa-arrow-down"></i></th>
-            <th :class="band === 'fiveup' ? 'bg-info' : ''">5<i class="fas fa-arrow-down"></i></th>
-            <th :class="band === 'sixup' ? 'bg-info' : ''">6<i class="fas fa-arrow-down"></i></th>
-            <th>10<i class="fas fa-arrow-down"></i></th>
+            <th>USN 25 50</th>
             <th></th>
             </thead>
             <tbody>
@@ -34,65 +19,18 @@
                     {{ result.candle_type }}
                 </td>
                 <td>
-                    {{ result.usn }}
+                    {{ result.usn_25_50 }}
                 </td>
                 <td>
-                    {{ result.middles }}
-                </td>
-                <td>
-                    {{ result.upneighbours }}
-                </td>
-                <td>
-                    {{ result.downneighbours }}
-                </td>
-                <td>
-                    {{ result.oneup }}
-                </td>
-                <td>
-                    {{ result.twoup }}
-                </td>
-                <td :class="band === 'threeup' ? 'bg-info' : ''">
-                    {{ result.threeup }}
-                </td>
-                <td :class="band === 'fourup' ? 'bg-info' : ''">
-                    {{ result.fourup }}
-                </td>
-                <td :class="band === 'fiveup' ? 'bg-info' : ''">
-                    {{ result.fiveup }}
-                </td>
-                <td :class="band === 'sixup' ? 'bg-info' : ''">
-                    {{ result.sixup }}
-                </td>
-                <td>
-                    {{ result.tenup }}
-                </td>
-                <td>
-                    {{ result.onedown }}
-                </td>
-                <td>
-                    {{ result.twodown }}
-                </td>
-                <td :class="band === 'threeup' ? 'bg-info' : ''">
-                    {{ result.threedown }}
-                </td>
-                <td :class="band === 'fourup' ? 'bg-info' : ''">
-                    {{ result.fourdown }}
-                </td>
-                <td :class="band === 'fiveup' ? 'bg-info' : ''">
-                    {{ result.fivedown }}
-                </td>
-                <td :class="band === 'sixup' ? 'bg-info' : ''">
-                    {{ result.sixdown }}
-                </td>
-                <td>
-                    {{ result.tendown }}
-                </td>
-                <td>
-                    <button class="btn btn-success btn-sm" @click="showResult(result.symbol1, result.symbol2, index)">Show</button>
+                    <button class="btn btn-success btn-xs" @click="showResult(result.symbol1, result.symbol2, index)">Show</button>
                 </td>
             </tr>
             </tbody>
         </table>
+        <button v-if="page <= 1" class="btn btn-info" disabled><i class="fa fa-arrow-left"></i></button>
+        <button v-if="page > 1" @click="getResults(page - 1)" class="btn btn-info"><i class="fa fa-arrow-left"></i></button>
+        {{ page }}
+        <button @click="getResults(page + 1)" class="btn btn-info"><i class="fa fa-arrow-right"></i></button>
     </div>
 </template>
 
@@ -104,8 +42,9 @@ export default {
     data: function() {
         return {
             results: [],
-            band: null,
             index: null,
+            frozen: null,
+            page: 1,
         };
     },
 
@@ -114,12 +53,13 @@ export default {
     },
 
     methods: {
-        getResults: function(band = null) {
-            this.band = band;
+        getResults: function(page = 1) {
+            this.page = page;
             axios.get('/results', {
                 params: {
                     candleType: this.candleType,
-                    band: band,
+                    frozen: this.frozen,
+                    page: page,
                 }
             }).then(response => {
                 this.results = response.data;
@@ -138,6 +78,11 @@ export default {
     },
 
     watch: {
+        frozen: function() {
+            if (this.frozen.length > 2 || !this.frozen || this.frozen === "") {
+                this.getResults();
+            }
+        },
         candleType: function() {
             this.getResults();
         },

@@ -2,8 +2,6 @@
     <div>
         <button @click="findPairs()" class="btn btn-info">Find Pairs</button>
         <br>
-        <br>
-        {{ message }}
     </div>
 </template>
 
@@ -13,16 +11,8 @@ export default {
     props: ['candleType'],
     data() {
         return {
-            'message': null,
             'results': null,
         };
-    },
-
-    mounted() {
-        let _this = this;
-        setInterval(function() {
-            _this.pollMessage();
-        }, 4000)
     },
 
     methods: {
@@ -32,16 +22,6 @@ export default {
                 candleType: this.candleType,
             }).then(response => {
                 _this.results = response.data;
-            });
-        },
-        pollMessage: function() {
-            let _this = this;
-            axios.get('/latest_message', {
-                params: {
-                    type: 'pair_check',
-                }
-            }).then(response => {
-                _this.message = response.data;
             });
         }
     }

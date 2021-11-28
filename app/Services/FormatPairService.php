@@ -38,6 +38,8 @@ class FormatPairService
 
     public function getCandlesData($symbol, $candleType): array
     {
+        //need the hour dir
+
         $today = Carbon::now()->startOfDay()->unix();
 
         $dirToday = public_path() . '/data/' . $today;
@@ -63,7 +65,7 @@ class FormatPairService
                 $startTime = Carbon::now()->subMonth()->unix() * 1000;
             } else {
                 //should be 1d
-                $startTime = Carbon::now()->subMonths(4)->unix() * 1000;
+                $startTime = Carbon::now()->subMonths(4)->unix() * 1000; //could make this deeper easily
             }
 
             $candles = file_get_contents("https://www.binance.com/api/v3/klines?symbol={$symbol}&interval={$candleType}&startTime=$startTime");

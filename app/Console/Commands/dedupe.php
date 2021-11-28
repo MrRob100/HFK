@@ -45,20 +45,21 @@ class dedupe extends Command
 
         $checked = 0;
         foreach ($rs as $symbolOuter) {
-            foreach ($rs as $symbolInner) {
+//            foreach ($rs as $symbolInner) {
 
                 if ($checked % 100 === 0) {
                     dump("checked $checked");
                 }
 
-                $result = Result::where('symbol1', $symbolOuter)->where('symbol2', $symbolInner);
+                $result = Result::where('symbol1', $symbolOuter)->where('symbol2', 'BNB');
+//                $result = Result::where('symbol1', $symbolOuter)->where('symbol2', $symbolInner);
 
                 if ($result->get()->count() > 1) {
                     $result->first()->delete();
                     dump('deleted, i= '. $checked);
                 }
                 $checked++;
-            }
+//            }
         }
 
         return Command::SUCCESS;

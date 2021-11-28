@@ -15,6 +15,11 @@ class CreateHoursTable extends Migration
     {
         Schema::create('hours', function (Blueprint $table) {
             $table->id();
+            $table->string('symbol1');
+            $table->string('symbol2');
+            $table->date('start');
+            $table->date('end');
+            $table->integer('usn');
             $table->timestamps();
         });
     }
