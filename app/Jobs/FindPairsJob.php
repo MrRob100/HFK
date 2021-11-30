@@ -14,8 +14,8 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Cache;
 
-//class FindPairsJob
-class FindPairsJob implements ShouldQueue
+class FindPairsJob
+//class FindPairsJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
@@ -40,7 +40,6 @@ class FindPairsJob implements ShouldQueue
         }
 
         $filtered = $data->filter(function ($value, $key) {
-
             if (
                 !str_contains($value->symbol, 'DOWN')
                 && !str_contains($value->symbol, 'BULL')
@@ -52,21 +51,54 @@ class FindPairsJob implements ShouldQueue
                 && !str_contains($value->symbol, 'EUR')
                 && !str_contains($value->symbol, 'GBP')
                 && !str_contains($value->symbol, 'AUD')
+                && !str_contains($value->symbol, 'DAI')
+                && !str_contains($value->symbol, 'RUB')
                 && !str_contains($value->symbol, 'USDC')
                 && !str_contains($value->symbol, 'TUSD')
                 && !str_contains($value->symbol, 'BUSD')
+                && !str_contains($value->symbol, 'SUSD')
+                && !str_contains($value->symbol, 'DAI')
                 && str_contains($value->symbol, 'USDT')
-//                && strpos($value->symbol, 'O') !== false //to slim down while testing
             ) {
                 return $value;
             }
         });
 
+        $filtered2 = $data->filter(function ($value, $key) {
+            if (
+                !str_contains($value->symbol, 'DOWN')
+                && !str_contains($value->symbol, 'BULL')
+                && !str_contains($value->symbol, 'BEAR')
+                && !str_contains($value->symbol, 'BTC')
+                && !str_contains($value->symbol, 'ETH')
+                && !str_contains($value->symbol, 'DOGE')
+                && !str_contains($value->symbol, 'MITH')
+                && !str_contains($value->symbol, 'RUB')
+                && !str_contains($value->symbol, 'EUR')
+                && !str_contains($value->symbol, 'GBP')
+                && !str_contains($value->symbol, 'AUD')
+                && !str_contains($value->symbol, 'DAI')
+                && !str_contains($value->symbol, 'USDC')
+                && !str_contains($value->symbol, 'TUSD')
+                && !str_contains($value->symbol, 'BUSD')
+                && !str_contains($value->symbol, 'SUSD')
+                && !str_contains($value->symbol, 'DAI')
+                && str_contains($value->symbol, 'USDT')
+                && strpos($value->symbol, 'Z') !== false //to slim down while testing
+            ) {
+                return $value;
+            }
+        });
+
+        dump('total: ' . $filtered->count() * $filtered2->count());
+
+        $i = 0;
+
         foreach ($filtered->toArray() as $symbolOuter) {
 
             $dataOuter = $this->formatPairsService->getCandlesData($symbolOuter->symbol, $this->candleType);
 
-            foreach ($filtered->toArray() as $symbolInner) {
+            foreach ($filtered2->toArray() as $symbolInner) {
 
                 if ($symbolOuter->symbol !== $symbolInner->symbol) {
 
@@ -86,12 +118,17 @@ class FindPairsJob implements ShouldQueue
                             $pairData = $this->formatPairsService->createPairData($dataOuter, $dataInner);
 
                             if (sizeof($pairData) > 88) {
+                                dump('add to db ' . $symbols['s1'] . 'x' . $symbols['s2']);
                                 $results = $this->performCalcs($pairData, $this->candleType, $symbolInner->symbol, $symbolOuter->symbol);
                             }
 
-                            $total = $filtered->count() * $filtered->count();
+
                         }
                     }
+                }
+                $i++;
+                if ($i % 100 === 0) {
+                    dump('checked ' . $i);
                 }
             }
         }
