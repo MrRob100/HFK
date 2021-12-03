@@ -16,7 +16,7 @@ class ResultsController extends Controller
 
         if ($request->frozen) {
              return Result::where('symbol1', $request->frozen)
-                 ->orWhere('symbol1', $request->frozen)
+                 ->orWhere('symbol2', $request->frozen)
                  ->orderBy('usn_25_50')
                  ->paginate(20);
         }

@@ -29,8 +29,4 @@ Auth::routes();
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
-Route::post('/find_pairs', [FindPairsController::class, 'findPairs'])->name('find_pairs');
-
-Route::get('/latest_message', [MessagesController::class, 'getLatest'])->name('get_latest');
-
 Route::get('/results', [ResultsController::class, 'index'])->name('get_results');

@@ -2,8 +2,7 @@
 
 namespace App\Jobs;
 
-use App\Models\Hour;
-use App\Models\Message;
+use App\Models\KucoinResult;
 use App\Models\Result;
 use App\Services\FormatPairService;
 use Carbon\Carbon;
@@ -19,27 +18,45 @@ class FindPairsJob
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
+    protected $exchange;
+
     protected $candleType;
 
     protected $formatPairsService;
 
-    public function __construct(string $candleType, FormatPairService $formatPairsService)
+    public function __construct(string $exchange, string $candleType, FormatPairService $formatPairsService)
     {
+        $this->exchange = $exchange;
         $this->candleType = $candleType;
         $this->formatPairsService = $formatPairsService;
     }
 
     public function handle()
     {
-        if (Cache::has('all')) {
-            $data = Cache::get('all');
-        } else {
-            $data = collect(json_decode(file_get_contents('https://api3.binance.com/api/v3/ticker/24hr')));
+        if ($this->exchange === 'binance') {
+            if (Cache::has('all')) {
+                $data = Cache::get('all');
+            } else {
+                $data = collect(json_decode(file_get_contents('https://api3.binance.com/api/v3/ticker/24hr')));
 
-            Cache::put('all', $data, 600);
+                Cache::put('all', $data, 600);
+            }
+        } elseif ($this->exchange === 'kucoin') {
+
+            if (Cache::has('allkucoin')) {
+                $data = Cache::get('allkucoin');
+            } else {
+                $data = collect(json_decode(file_get_contents('https://api.kucoin.com/api/v1/symbols'))->data);
+
+                Cache::put('allkucoin', $data, 600);
+            }
+
+        } else {
+            dd('no exchange');
         }
 
         $filtered = $data->filter(function ($value, $key) {
+
             if (
                 !str_contains($value->symbol, 'DOWN')
                 && !str_contains($value->symbol, 'BULL')
@@ -58,37 +75,26 @@ class FindPairsJob
                 && !str_contains($value->symbol, 'BUSD')
                 && !str_contains($value->symbol, 'SUSD')
                 && !str_contains($value->symbol, 'DAI')
+                && !str_contains($value->symbol, 'BVND')
+                && !str_contains($value->symbol, 'IDRT')
+                && !str_contains($value->symbol, 'UAH')
+                && !str_contains($value->symbol, 'RUB')
+                && !str_contains($value->symbol, 'BIDR')
                 && str_contains($value->symbol, 'USDT')
+//                && str_contains($value->symbol, 'AK')//slimmed
             ) {
                 return $value;
             }
         });
 
-        $filtered2 = $data->filter(function ($value, $key) {
-            if (
-                !str_contains($value->symbol, 'DOWN')
-                && !str_contains($value->symbol, 'BULL')
-                && !str_contains($value->symbol, 'BEAR')
-                && !str_contains($value->symbol, 'BTC')
-                && !str_contains($value->symbol, 'ETH')
-                && !str_contains($value->symbol, 'DOGE')
-                && !str_contains($value->symbol, 'MITH')
-                && !str_contains($value->symbol, 'RUB')
-                && !str_contains($value->symbol, 'EUR')
-                && !str_contains($value->symbol, 'GBP')
-                && !str_contains($value->symbol, 'AUD')
-                && !str_contains($value->symbol, 'DAI')
-                && !str_contains($value->symbol, 'USDC')
-                && !str_contains($value->symbol, 'TUSD')
-                && !str_contains($value->symbol, 'BUSD')
-                && !str_contains($value->symbol, 'SUSD')
-                && !str_contains($value->symbol, 'DAI')
-                && str_contains($value->symbol, 'USDT')
-                && strpos($value->symbol, 'Z') !== false //to slim down while testing
-            ) {
+        $filtered2 = $filtered->filter(function ($value, $key) {
+            if (str_contains($value->symbol, 'AK')) {
                 return $value;
             }
         });
+
+
+//        $filtered2 = $filtered;
 
         dump('total: ' . $filtered->count() * $filtered2->count());
 
@@ -96,33 +102,41 @@ class FindPairsJob
 
         foreach ($filtered->toArray() as $symbolOuter) {
 
-            $dataOuter = $this->formatPairsService->getCandlesData($symbolOuter->symbol, $this->candleType);
+            $dataOuter = $this->formatPairsService->getCandlesData($symbolOuter->symbol, $this->candleType, $this->exchange);
 
             foreach ($filtered2->toArray() as $symbolInner) {
 
                 if ($symbolOuter->symbol !== $symbolInner->symbol) {
 
-                    $symbols = [
-                        's1' => str_replace('USDT', '', $symbolOuter->symbol),
-                        's2' => str_replace('USDT', '', $symbolInner->symbol),
-                    ];
-
                     if ($this->candleType === '1d') {
-                        if (
-                            Result::where('symbol1', $symbols['s1'])->where('symbol2', $symbols['s2'])->get()->isEmpty()
-                            && Result::where('symbol1', $symbols['s2'])->where('symbol2', $symbols['s1'])->get()->isEmpty()
-                        ) {
+                        if ($this->exchange === 'binance') {
 
-                            $dataInner = $this->formatPairsService->getCandlesData($symbolInner->symbol, $this->candleType);
+                            $symbols = [
+                                's1' => str_replace('USDT', '', $symbolOuter->symbol),
+                                's2' => str_replace('USDT', '', $symbolInner->symbol),
+                            ];
 
-                            $pairData = $this->formatPairsService->createPairData($dataOuter, $dataInner);
-
-                            if (sizeof($pairData) > 88) {
-                                dump('add to db ' . $symbols['s1'] . 'x' . $symbols['s2']);
-                                $results = $this->performCalcs($pairData, $this->candleType, $symbolInner->symbol, $symbolOuter->symbol);
+                            if (
+                                Result::where('symbol1', $symbols['s1'])->where('symbol2', $symbols['s2'])->get()->isEmpty()
+                                && Result::where('symbol1', $symbols['s2'])->where('symbol2', $symbols['s1'])->get()->isEmpty()
+                            ) {
+                                $dataInner = $this->formatPairsService->getCandlesData($symbolInner->symbol, $this->candleType, 'binance');
+                                $this->dry($symbolInner->symbol, $symbolOuter->symbol, $dataOuter, $dataInner);
                             }
+                        } elseif ($this->exchange === 'kucoin') {
 
+                            $symbols = [
+                                's1' => str_replace('-USDT', '', $symbolOuter->symbol),
+                                's2' => str_replace('-USDT', '', $symbolInner->symbol),
+                            ];
 
+                            if (
+                                KucoinResult::where('symbol1', $symbols['s1'])->where('symbol2', $symbols['s2'])->get()->isEmpty()
+                                && KucoinResult::where('symbol1', $symbols['s2'])->where('symbol2', $symbols['s1'])->get()->isEmpty()
+                            ) {
+                                $dataInner = $this->formatPairsService->getCandlesData($symbolInner->symbol, $this->candleType, 'kucoin');
+                                $this->dry($symbolInner->symbol, $symbolOuter->symbol, $dataOuter, $dataInner);
+                            }
                         }
                     }
                 }
@@ -133,33 +147,39 @@ class FindPairsJob
             }
         }
 
-        //get akronuls
 
-        if (
-            Result::where('symbol1', 'AKRO')->where('symbol2', 'NULS')->get()->isEmpty()
-            && Result::where('symbol1', 'NULS')->where('symbol2', 'AKRO')->get()->isEmpty()
-        ) {
-            $akro = $this->formatPairsService->getCandlesData('AKROUSDT', $this->candleType);
-            $nuls = $this->formatPairsService->getCandlesData('NULSUSDT', $this->candleType);
+        if ($this->exchange === 'kucoin') {
 
-            $akronuls = $this->formatPairsService->createPairData($akro, $nuls);
+            dump('exchange is kucoin');
 
-            $akronuls_result = $this->performCalcs($akronuls, $this->candleType, 'AKROUSDT', 'NULSUSDT');
+            if (
+                KucoinResult::where('symbol1', 'BNB')->where('symbol2', 'DOT')->get()->isEmpty()
+                && KucoinResult::where('symbol1', 'DOT')->where('symbol2', 'BNB')->get()->isEmpty()
+            ) {
+
+
+                dump('table empty');
+
+                $dataOuter = $this->formatPairsService->getCandlesData('BNB-USDT', $this->candleType, 'kucoin');
+                $dataInner = $this->formatPairsService->getCandlesData('DOT-USDT', $this->candleType, 'kucoin');
+
+                $this->dry('BNB-USDT', 'DOT-USDT', $dataOuter, $dataInner);
+            }
+        }
+    }
+
+    public function dry(string $symbolInner, string $symbolOuter, $dataOuter, $dataInner)
+    {
+        $pairData = $this->formatPairsService->createPairData($dataOuter, $dataInner);
+
+        if (sizeof($pairData) > 88) {
+            dump('add to db ' . $symbolInner . 'x' . $symbolOuter);
+            $results = $this->performCalcs($pairData, $this->candleType, $symbolInner, $symbolOuter);
         }
     }
 
     public function performCalcs($pairData, $candleType, $symbol1, $symbol2)
     {
-        //first we want to truth it
-        //then we want to give it a score
-
-        // IMPLEMENT THIS
-        //n is period - make it 25
-
-        //EMA = (Close - previous EMA) * (2 / n+1) + previous EMA
-
-        //set all in [] then loop through those again to calc dists from MA etc
-
         $i = 0;
         $calced = [];
 
@@ -210,17 +230,27 @@ class FindPairsJob
             $i++;
         }
 
-        $s1 = str_replace('USDT', '', $symbol1);
-        $s2 = str_replace('USDT', '', $symbol2);
-
-        Result::create([
-            'symbol1' => $s1,
-            'symbol2' => $s2,
-            'candle_type' => $candleType,
-            'start' => Carbon::createFromTimestamp($pairData[0][0] / 1000)->toDate(),
-            'end' => Carbon::createFromTimestamp($pairData[sizeof($pairData) - 1][0] / 1000)->toDate(),
-            'usn_25_50' => $usn_25_50,
-        ]);
+        if ($this->exchange === 'binance') {
+            Result::create([
+                'symbol1' => str_replace('USDT', '', $symbol1),
+                'symbol2' => str_replace('USDT', '', $symbol2),
+                'candle_type' => $candleType,
+                'start' => Carbon::createFromTimestamp($pairData[0][0] / 1000)->toDate(),
+                'end' => Carbon::createFromTimestamp($pairData[sizeof($pairData) - 1][0] / 1000)->toDate(),
+                'usn_25_50' => $usn_25_50,
+            ]);
+        } elseif ($this->exchange === 'kucoin') {
+            KucoinResult::create([
+                'symbol1' => str_replace('-USDT', '', $symbol1),
+                'symbol2' => str_replace('-USDT', '', $symbol2),
+                'candle_type' => $candleType,
+                'start' => Carbon::createFromTimestamp($pairData[0][0] / 1000)->toDate(),
+                'end' => Carbon::createFromTimestamp($pairData[sizeof($pairData) - 1][0] / 1000)->toDate(),
+                'usn_25_50' => $usn_25_50,
+            ]);
+        } else {
+            dd('neither');
+        }
 
         return [];
     }

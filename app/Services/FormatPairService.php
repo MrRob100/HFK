@@ -15,7 +15,7 @@ class FormatPairService
         $pair = [];
         for($i=0; $i<$size_max; $i++) {
 
-            if ($i < $size_min) {
+            if ($i < $size_min && isset($data1[$i])) {
 
                 $unix = $data1[$i][0];
                 $o = $data1[$i][1] / $data2[$i][1];
@@ -36,57 +36,39 @@ class FormatPairService
         return $pair;
     }
 
-    public function getCandlesData($symbol, $candleType): array
+    public function getCandlesData($symbol, $candleType, $exchange): array
     {
-        //need the hour dir
+        $dir = public_path() . '/data';
+        $file = $dir . '/' . $symbol . '.json';
 
-        $today = Carbon::now()->startOfDay()->unix();
+        if ($candleType === "1h") {
 
-        $dirToday = public_path() . '/data/' . $today;
+            $candleTypeKucoin = "1hour";
 
-        $dir = $dirToday . '/' . $candleType;
-
-        if (!is_dir($dirToday)) {
-            mkdir($dirToday);
-
-            if (!is_dir($dir)) {
-                mkdir($dir);
-            }
-        }
-
-        $this->deleteYesterday($candleType);
-
-        //create file if doesnt exist
-        $fileName = $dir . '/' . $symbol . '.json';
-        if (file_exists($fileName)) {
-            $candles = file_get_contents($fileName);
+            $startTime = Carbon::now()->subMonth()->unix();
         } else {
-            if ($candleType === "1h") {
-                $startTime = Carbon::now()->subMonth()->unix() * 1000;
-            } else {
-                //should be 1d
-                $startTime = Carbon::now()->subMonths(4)->unix() * 1000; //could make this deeper easily
-            }
 
-            $candles = file_get_contents("https://www.binance.com/api/v3/klines?symbol={$symbol}&interval={$candleType}&startTime=$startTime");
-            file_put_contents($fileName, $candles);
+            $candleTypeKucoin = "1day";
+
+            $startTime = Carbon::now()->subMonths(4)->unix(); //could make this deeper easily
         }
 
-        return json_decode($candles, true);
-    }
+        if (file_exists($file)) {
+            $candles = json_decode(file_get_contents($file));
+        } else {
+            $candles = [];
+            if ($exchange === 'binance') {
 
-    public function deleteYesterday($candleType): void
-    {
-        $day = Carbon::yesterday()->unix();
-
-        $path = public_path() . '/data/' . $day . '/' . $candleType;
-
-        if (is_dir($path)) {
-            $files = glob($path . '/*');
-            foreach ($files as $file) {
-                is_dir($file) ? removeDirectory($file) : unlink($file);
+                $start = $startTime * 1000;
+                $candles = json_decode(file_get_contents("https://www.binance.com/api/v3/klines?symbol={$symbol}&interval={$candleType}&startTime=$start"), true);
             }
-            rmdir($path);
+
+            if ($exchange === 'kucoin') {
+                $candles = json_decode(file_get_contents("https://api.kucoin.com/api/v1/market/candles?type={$candleTypeKucoin}&symbol={$symbol}&startAt={$startTime}"), true)['data'];
+            }
+            file_put_contents($file, json_encode($candles));
         }
+
+        return $candles;
     }
 }

@@ -61,8 +61,6 @@
         ></pair>
         <br>
         <div>
-            <run-controls :candleType="candleType">
-            </run-controls>
 <!--            <pair-record-->
 <!--                :latest-data-route="latestDataRoute"-->
 <!--                :balance-route="balanceRoute"-->
