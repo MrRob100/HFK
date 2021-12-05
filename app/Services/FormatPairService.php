@@ -2,12 +2,11 @@
 
 namespace App\Services;
 
-use App\Models\Truth;
 use Carbon\Carbon;
 
 class FormatPairService
 {
-    public function createPairData($data1, $data2): array
+    public function createPairData($data1, $data2, $timesHun = false): array
     {
         $size_max = max(sizeof($data1), sizeof($data2) - 1);
         $size_min = min(sizeof($data1), sizeof($data2) - 1);
@@ -17,7 +16,7 @@ class FormatPairService
 
             if ($i < $size_min && isset($data1[$i])) {
 
-                $unix = $data1[$i][0];
+                $unix = intval($data1[$i][0]) * ($timesHun ? 1000 : 1);
                 $o = $data1[$i][1] / $data2[$i][1];
                 $h = $data1[$i][2] / $data2[$i][2];
                 $l = $data1[$i][3] / $data2[$i][3];

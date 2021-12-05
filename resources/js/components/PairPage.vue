@@ -70,6 +70,7 @@
             <br>
             <results
                 :candleType="candleType"
+                :marketType="marketType"
                 @show="show"
             >
             </results>
@@ -86,7 +87,7 @@ export default {
 
     data: function () {
         return {
-            candleType: '1d',
+            candleType: "1d",
             value: '',
             v1: "",
             v2: "",
@@ -102,15 +103,6 @@ export default {
     },
 
     methods: {
-        getOptions: function() {
-            if (this.marketType === "oil") {
-                return this.symbols.oil;
-            }
-
-            if (this.marketType === "metals") {
-                return this.symbols.metals;
-            }
-        },
         go: function() {
             this.value = [
                 {"name": (this.v1).toUpperCase()},

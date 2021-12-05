@@ -163,14 +163,14 @@ class FindPairsJob
                 $dataOuter = $this->formatPairsService->getCandlesData('BNB-USDT', $this->candleType, 'kucoin');
                 $dataInner = $this->formatPairsService->getCandlesData('DOT-USDT', $this->candleType, 'kucoin');
 
-                $this->dry('BNB-USDT', 'DOT-USDT', $dataOuter, $dataInner);
+                $this->dry('BNB-USDT', 'DOT-USDT', $dataOuter, $dataInner, true);
             }
         }
     }
 
-    public function dry(string $symbolInner, string $symbolOuter, $dataOuter, $dataInner)
+    public function dry(string $symbolInner, string $symbolOuter, $dataOuter, $dataInner, $timesHun = false)
     {
-        $pairData = $this->formatPairsService->createPairData($dataOuter, $dataInner);
+        $pairData = $this->formatPairsService->createPairData($dataOuter, $dataInner, $timesHun);
 
         if (sizeof($pairData) > 88) {
             dump('add to db ' . $symbolInner . 'x' . $symbolOuter);

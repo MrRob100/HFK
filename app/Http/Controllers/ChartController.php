@@ -4,25 +4,32 @@ namespace App\Http\Controllers;
 
 use App\Services\BinanceGetService;
 use App\Services\FormatPairService;
+use App\Services\KucoinGetService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 
 class ChartController extends Controller
 {
     public $binanceGetService;
+    public $kucoinGetService;
     public $formatPairService;
 
-    public function __construct(BinanceGetService $binanceGetService, FormatPairService $formatPairService)
+    public function __construct(
+        BinanceGetService $binanceGetService,
+        FormatPairService $formatPairService,
+        KucoinGetService $kucoinGetService
+    )
     {
         $this->binanceGetService = $binanceGetService;
+        $this->kucoinGetService = $kucoinGetService;
         $this->formatPairService = $formatPairService;
     }
 
     public function data(Request $request): array
     {
-//        if ($request->type === 'kucoin') {
-//            return $this->kucoin($request);
-//        }
+        if ($request->type === 'kucoin') {
+            return $this->kucoin($request);
+        }
 
         if ($request->type === 'binance') {
             return $this->binance($request);
@@ -84,6 +91,42 @@ class ChartController extends Controller
 
         return array_reverse($formatted);
     }
+
+    public function kucoin(Request $request): array
+    {
+        $response1 = $this->kucoinGetService->apiCall($request->s1, $request->candleType);
+        $response2 = $this->kucoinGetService->apiCall($request->s2, $request->candleType);
+
+        $pair = $this->formatPairService->createPairData($response1, $response2, true);
+
+        return [
+            'first' => $this->formatKucoinResponse($response1),
+            'pair' => array_reverse($pair),
+            'second' => $this->formatKucoinResponse($response2),
+            'events' => [
+                'middlePrice1' => null,
+                'middlePrice2' => null,
+                'middlePrice3' => null,
+            ]
+        ];
+    }
+
+    public function formatKucoinResponse(array $data): array
+    {
+        $formatted = [];
+        foreach($data as $item) {
+            $formatted[] = [
+                floatval($item[0]) * 1000,
+                floatval($item[1]),
+                floatval($item[3]),
+                floatval($item[4]),
+                floatval($item[2]),
+            ];
+        }
+
+        return array_reverse($formatted);
+    }
+
     public function pair(): View
     {
         return view('pair');

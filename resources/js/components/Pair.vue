@@ -146,6 +146,9 @@ export default {
                 this.setChartHeading(val);
             }
         },
+        type: function() {
+            this.getData(this.symbols[0].name, this.symbols[1].name, this.type, this.candleType);
+        }
     }
 }
 </script>
