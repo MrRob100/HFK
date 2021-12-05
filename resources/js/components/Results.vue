@@ -37,7 +37,8 @@
 <script>
 export default {
     props: [
-        "candle-type"
+        "candle-type",
+        "market-type"
     ],
     data: function() {
         return {
@@ -58,6 +59,7 @@ export default {
             axios.get('/results', {
                 params: {
                     candleType: this.candleType,
+                    marketType: this.marketType,
                     frozen: this.frozen,
                     page: page,
                 }
@@ -84,6 +86,9 @@ export default {
             }
         },
         candleType: function() {
+            this.getResults();
+        },
+        marketType: function() {
             this.getResults();
         },
         index: function(newVal, oldVal) {
