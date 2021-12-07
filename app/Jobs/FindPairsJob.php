@@ -88,7 +88,7 @@ class FindPairsJob
         });
 
         $filtered2 = $filtered->filter(function ($value, $key) {
-            if (str_contains($value->symbol, 'AK')) {
+            if (str_contains($value->symbol, 'A')) {
                 return $value;
             }
         });

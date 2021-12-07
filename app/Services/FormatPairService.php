@@ -63,7 +63,13 @@ class FormatPairService
             }
 
             if ($exchange === 'kucoin') {
-                $candles = json_decode(file_get_contents("https://api.kucoin.com/api/v1/market/candles?type={$candleTypeKucoin}&symbol={$symbol}&startAt={$startTime}"), true)['data'];
+                try {
+                    $candles = json_decode(file_get_contents("https://api.kucoin.com/api/v1/market/candles?type={$candleTypeKucoin}&symbol={$symbol}&startAt={$startTime}"), true)['data'];
+                }
+
+                catch(\Exception $e) {
+                    dd($e);
+                }
             }
             file_put_contents($file, json_encode($candles));
         }
