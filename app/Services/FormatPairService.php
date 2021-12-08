@@ -6,7 +6,7 @@ use Carbon\Carbon;
 
 class FormatPairService
 {
-    public function createPairData($data1, $data2, $timesHun = false): array
+    public function createBinancePairData($data1, $data2): array
     {
         $size_max = max(sizeof($data1), sizeof($data2) - 1);
         $size_min = min(sizeof($data1), sizeof($data2) - 1);
@@ -16,7 +16,7 @@ class FormatPairService
 
             if ($i < $size_min && isset($data1[$i])) {
 
-                $unix = intval($data1[$i][0]) * ($timesHun ? 1000 : 1);
+                $unix = intval($data1[$i][0]);
                 $o = $data1[$i][1] / $data2[$i][1];
                 $h = $data1[$i][2] / $data2[$i][2];
                 $l = $data1[$i][3] / $data2[$i][3];
@@ -35,10 +35,58 @@ class FormatPairService
         return $pair;
     }
 
+    public function createKucoinPairData($data1, $data2): array
+    {
+        $size_max = max(sizeof($data1), sizeof($data2) - 1);
+        $size_min = min(sizeof($data1), sizeof($data2) - 1);
+
+        $pair = [];
+        $i_data1 = 0;
+        $i_data2 = 0;
+        for($i=0; $i<$size_max; $i++) {
+
+            if ($i < $size_min && isset($data1[$i])) {
+
+                if (isset($data1[$i_data1]) && isset($data2[$i_data2])) {
+                    if ($data1[$i_data1][0] > $data2[$i_data2][0]) {
+                        $i_data2++;
+                    }
+
+                    if (isset($data1[$i_data1]) && isset($data2[$i_data2])) {
+                        if ($data1[$i_data1][0] < $data2[$i_data2][0]) {
+                            $i_data1++;
+                        }
+
+                        if (isset($data1[$i_data1]) && isset($data2[$i_data2]) && $data1[$i_data1][0] === $data2[$i_data2][0]) {
+
+                            $unix = intval($data1[$i_data1][0]) * 1000;
+                            $o = $data1[$i_data1][1] / $data2[$i_data2][1];
+                            $h = $data1[$i_data1][3] / $data2[$i_data2][3];
+                            $l = $data1[$i_data1][4] / $data2[$i_data2][4];
+                            $c = $data1[$i_data1][2] / $data2[$i_data2][2];
+
+                            $pair[] = [
+                                $unix,
+                                $o,
+                                $h,
+                                $l,
+                                $c,
+                            ];
+                        }
+                    }
+                }
+            }
+            $i_data1++;
+            $i_data2++;
+        }
+
+        return $pair;
+    }
+
     public function getCandlesData($symbol, $candleType, $exchange): array
     {
         $dir = public_path() . '/data';
-        $file = $dir . '/' . $symbol . '.json';
+        $file = $dir . '/' . str_replace('-', '', $symbol) . '.json';
 
         if ($candleType === "1h") {
 
@@ -65,13 +113,26 @@ class FormatPairService
             if ($exchange === 'kucoin') {
                 try {
                     $candles = json_decode(file_get_contents("https://api.kucoin.com/api/v1/market/candles?type={$candleTypeKucoin}&symbol={$symbol}&startAt={$startTime}"), true)['data'];
+
+                    $candlesFormatted = [];
+                    foreach ($candles as $candle) {
+                        $candlesFormatted[] = [
+                            intval($candle[0] * 1000),
+                            $candle[1],
+                            $candle[2],
+                            $candle[3],
+                            $candle[4],
+                        ];
+                    }
+
+                    file_put_contents($file, json_encode($candlesFormatted));
                 }
 
                 catch(\Exception $e) {
-                    dd($e);
+                    dump($e->getMessage());
+                    sleep(40);
                 }
             }
-            file_put_contents($file, json_encode($candles));
         }
 
         return $candles;

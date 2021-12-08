@@ -95,7 +95,7 @@ export default {
                 binance: [],
                 kucoin: [],
             },
-            marketType: "binance", //could be kucoin
+            marketType: "kucoin", //could be kucoin
             added: [],
             pushLasts: [],
             open: false,

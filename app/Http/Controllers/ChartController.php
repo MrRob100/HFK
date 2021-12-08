@@ -43,7 +43,7 @@ class ChartController extends Controller
         $response1 = $this->binanceGetService->apiCall($request->s1, $request->candleType);
         $response2 = $this->binanceGetService->apiCall($request->s2, $request->candleType);
 
-        $pair = $this->formatPairService->createPairData($response1, $response2);
+        $pair = $this->formatPairService->createBinancePairData($response1, $response2);
 
 //        $size_max = max(sizeof($response1), sizeof($response2) - 1);
 //        $size_min = min(sizeof($response1), sizeof($response2) - 1);
@@ -97,7 +97,7 @@ class ChartController extends Controller
         $response1 = $this->kucoinGetService->apiCall($request->s1, $request->candleType);
         $response2 = $this->kucoinGetService->apiCall($request->s2, $request->candleType);
 
-        $pair = $this->formatPairService->createPairData($response1, $response2, true);
+        $pair = $this->formatPairService->createKucoinPairData($response1, $response2);
 
         return [
             'first' => $this->formatKucoinResponse($response1),
