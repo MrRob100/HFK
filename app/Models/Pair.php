@@ -5,17 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Truth extends Model
+class Pair extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'pair',
-        'unix',
-        'o',
-        'h',
-        'l',
-        'c',
-        'ema',
+        's1',
+        's2',
+        'state',
     ];
 }

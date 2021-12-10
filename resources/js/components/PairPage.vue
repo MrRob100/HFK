@@ -1,55 +1,58 @@
 <template>
     <div>
         <div class="row m-2">
-            <div class="col-md-6">
-<!--                <list-->
-<!--                    @populate="populate"-->
-<!--                    :spr="spr"-->
-<!--                    :added="added"-->
-<!--                    :dlr="dlr"-->
-<!--                ></list>-->
-            </div>
-        </div>
-        <div class="m-3">
-            <div class="form-check">
-                <input class="form-check-input" type="radio" name="hour" id="hour" value="1h" v-model="candleType">
-                <label class="form-check-label" for="hour">
-                    Hour
-                </label>
-            </div>
-            <div class="form-check">
-                <input class="form-check-input" type="radio" name="day" id="day" value="1d" v-model="candleType" checked>
-                <label class="form-check-label" for="day">
-                    Day
-                </label>
-            </div>
-            <br>
-            <div class="form-check">
-                <input class="form-check-input" type="radio" name="kucoin" id="kucoin" value="kucoin" v-model="marketType">
-                <label class="form-check-label" for="kucoin">
-                    Kucoin
-                </label>
-            </div>
-            <div class="form-check">
-                <input class="form-check-input" type="radio" name="binance" id="binance" value="binance" v-model="marketType" checked>
-                <label class="form-check-label" for="binance">
-                    Binance
-                </label>
-            </div>
-            <div class="form-group">
-                <div class="row">
-                    <div class="col-3 pr-0">
-                        <input type="text" :value="v1.toUpperCase()" @input="v1 = $event.target.value.toUpperCase()" class="form-control mb-1">
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-3 mr-0 pr-0">
-                        <input type="text" :value="v2.toUpperCase()" @input="v2 = $event.target.value.toUpperCase()" class="form-control">
-                    </div>
-                </div>
+            <div class="m-3">
+<!--                <div class="form-check">-->
+<!--                    <input class="form-check-input" type="radio" name="hour" id="hour" value="1h" v-model="candleType">-->
+<!--                    <label class="form-check-label" for="hour">-->
+<!--                        Hour-->
+<!--                    </label>-->
+<!--                </div>-->
+<!--                <div class="form-check">-->
+<!--                    <input class="form-check-input" type="radio" name="day" id="day" value="1d" v-model="candleType" checked>-->
+<!--                    <label class="form-check-label" for="day">-->
+<!--                        Day-->
+<!--                    </label>-->
+<!--                </div>-->
                 <br>
-                <button @click="go" class="btn btn-sml btn-success">go</button>
-                <button @click="add" class="btn btn-success"><i class="fa fa-plus"></i></button>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="kucoin" id="kucoin" value="kucoin" v-model="marketType">
+                    <label class="form-check-label" for="kucoin">
+                        Kucoin
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="binance" id="binance" value="binance" v-model="marketType" checked>
+                    <label class="form-check-label" for="binance">
+                        Binance
+                    </label>
+                </div>
+                <div class="form-group">
+                    <div>
+                        <div class="pr-0">
+                            <input type="text" :value="v1.toUpperCase()" @input="v1 = $event.target.value.toUpperCase()" class="form-control mb-1">
+                        </div>
+                    </div>
+                    <div>
+                        <div class="mr-0 pr-0">
+                            <input type="text" :value="v2.toUpperCase()" @input="v2 = $event.target.value.toUpperCase()" class="form-control">
+                        </div>
+                    </div>
+                    <br>
+                    <button @click="go" class="btn btn-sml btn-success">Go</button>
+
+                    <button @click="add('active')" class="btn btn-success"><i class="fa fa-bolt"></i></button>
+                    <button @click="add('archived')" class="btn btn-secondary"><i class="fa fa-book"></i></button>
+                    <button @click="add('next')" class="btn btn-success"><i class="fa fa-lightbulb"></i></button>
+                    <button @click="sync" class="btn btn-info"><i class="fa fa-sync"></i></button>
+
+                </div>
+            </div>
+            <div class="col-md-9">
+                <list
+                    @populate="populate"
+                    :added="added"
+                ></list>
             </div>
         </div>
 
@@ -60,6 +63,14 @@
             :candleType="candleType"
         ></pair>
         <br>
+        <br>
+        <div class="container">
+            <controls
+                :symbol1="v1.toUpperCase()"
+                :symbol2="v2.toUpperCase()"
+            ></controls>
+            <!--            <limits></limits>-->
+        </div>
         <div>
 <!--            <pair-record-->
 <!--                :latest-data-route="latestDataRoute"-->
@@ -116,13 +127,18 @@ export default {
             this.go();
         },
 
-        add: function() {
+        sync: function() {
+            axios.get("/sync");
+        },
+
+        add: function(state) {
             let _this = this;
             axios
-                .post(this.cpr, {
+                .post("/pairs", {
                     params: {
-                        s1: this.v1,
-                        s2: this.v2,
+                        s1: this.v1.toUpperCase(),
+                        s2: this.v2.toUpperCase(),
+                        state: state,
                     },
                 })
                 .then(function() {
@@ -132,17 +148,6 @@ export default {
                     ]
                 });
         },
-        randomize: function() {
-            let _this = this;
-            axios.get(this.rand).then(response => {
-                _this.v2 = response.data.v2;
-                _this.v1 = response.data.v1;
-                _this.value = [
-                    {"name": (response.data.v1).toUpperCase()},
-                    {"name": (response.data.v2).toUpperCase()},
-                ];
-            });
-        },
         show: function(symbol1, symbol2) {
             this.v1 = symbol1;
             this.v2 = symbol2;
@@ -151,20 +156,6 @@ export default {
                 {"name": (symbol1).toUpperCase()},
                 {"name": (symbol2).toUpperCase()},
             ]
-        },
-        trash: function() {
-            let _this = this;
-            axios.post(this.dp, {
-                params: {
-                    s1: this.v1,
-                    s2: this.v2,
-                }
-            }).then(response => {
-                if (!this.v1frozen) {
-                    _this.v1 = '';
-                }
-                _this.v2 = '';
-            })
         },
         sendLasts: function(data) {
             this.pushLasts = data;

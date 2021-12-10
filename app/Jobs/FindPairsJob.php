@@ -75,11 +75,11 @@ class FindPairsJob
                 && !str_contains($value->symbol, 'BUSD')
                 && !str_contains($value->symbol, 'SUSD')
                 && !str_contains($value->symbol, 'DAI')
-                && !str_contains($value->symbol, 'BVND')
-                && !str_contains($value->symbol, 'IDRT')
-                && !str_contains($value->symbol, 'UAH')
-                && !str_contains($value->symbol, 'RUB')
-                && !str_contains($value->symbol, 'BIDR')
+//                && !str_contains($value->symbol, 'BVND')
+//                && !str_contains($value->symbol, 'IDRT')
+//                && !str_contains($value->symbol, 'UAH')
+//                && !str_contains($value->symbol, 'RUB')
+//                && !str_contains($value->symbol, 'BIDR')
                 && str_contains($value->symbol, 'USDT')
 //                && str_contains($value->symbol, 'AK')//slimmed
             ) {
@@ -88,7 +88,7 @@ class FindPairsJob
         });
 
         $filtered2 = $filtered->filter(function ($value, $key) {
-            if (str_contains($value->symbol, 'SOL')) {
+            if (str_contains($value->symbol, 'STX')) {
                 return $value;
             }
         });
