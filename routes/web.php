@@ -18,10 +18,6 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
-});
-
 /* chart data */
 Route::get('/chart_data', [ChartController::class, 'data'])->name('chart.data');
 
