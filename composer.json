@@ -6,9 +6,11 @@
     "license": "MIT",
     "require": {
         "php": "^7.3|^8.0",
+        "ext-curl": "*",
         "ext-json": "*",
         "fruitcake/laravel-cors": "^2.0",
         "guzzlehttp/guzzle": "^7.0.1",
+        "kucoin/kucoin-php-sdk": "~1.1.0",
         "laravel/framework": "^8.65",
         "laravel/horizon": "^5.7",
         "laravel/sanctum": "^2.11",

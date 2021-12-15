@@ -20,6 +20,9 @@
                         <br>
                         <br>
                         <button @click="getPosition(symbol2, 'two')" class="btn btn-info mb-2">Balance {{ symbol2 }}: {{ bal.two }} (${{ Math.floor(bal.twoUSD) }})</button>
+                        <br>
+                        <button @click="getBalance('USDT', 'usdt')" class="btn btn-info mb-2">Balance USDT: ${{ Math.floor(bal.usdt) }}</button>
+                        <br>
                     </div>
                 </div>
                 <div class="row">
