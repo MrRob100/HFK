@@ -21,8 +21,9 @@
                         <br>
                         <button @click="getPosition(symbol2, 'two')" class="btn btn-info mb-2">Balance {{ symbol2 }}: {{ bal.two }} (${{ Math.floor(bal.twoUSD) }})</button>
                         <br>
-                        <button @click="getBalance('USDT', 'usdt')" class="btn btn-info mb-2">Balance USDT: ${{ Math.floor(bal.usdt) }}</button>
-                        <br>
+                    </div>
+                    <div class="col-12">
+                        <button @click="getPosition('USDT', 'usdt')" class="btn btn-info mb-2">Balance USDT: ${{ Math.floor(bal.usdt) }}</button>
                     </div>
                 </div>
                 <div class="row">
@@ -100,6 +101,7 @@ export default {
                     of: symbol,
                 }
             }).then(function (response) {
+
                 let suffix = which + 'USD';
 
                 if (response.data === "") {
