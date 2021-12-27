@@ -59,11 +59,12 @@ class FindPairsJob
 
             if (
                 !str_contains($value->symbol, 'DOWN')
+                && !str_contains($value->symbol, 'UP')
                 && !str_contains($value->symbol, 'BULL')
                 && !str_contains($value->symbol, 'BEAR')
-                && !str_contains($value->symbol, 'BTC')
-                && !str_contains($value->symbol, 'ETH')
-                && !str_contains($value->symbol, 'DOGE')
+//                && !str_contains($value->symbol, 'BTC')
+//                && !str_contains($value->symbol, 'ETH')
+//                && !str_contains($value->symbol, 'DOGE')
                 && !str_contains($value->symbol, 'MITH')
                 && !str_contains($value->symbol, 'EUR')
                 && !str_contains($value->symbol, 'GBP')
@@ -87,19 +88,21 @@ class FindPairsJob
             }
         });
 
-        $filtered2 = $filtered->filter(function ($value, $key) {
-            if (str_contains($value->symbol, 'STX')) {
-                return $value;
-            }
-        });
+//        $filtered2 = $filtered->filter(function ($value, $key) {
+//            if (str_contains($value->symbol, 'STX')) {
+//                return $value;
+//            }
+//        });
 
-//        $filtered2 = $filtered;
+        $filtered2 = $filtered;
 
         dump('total: ' . $filtered->count() * $filtered2->count());
 
         $i = 0;
 
         foreach ($filtered->toArray() as $symbolOuter) {
+
+            //if db whereS1 symbolouter->symbol ->count() > filtered->count()
 
             $dataOuter = $this->formatPairsService->getCandlesData($symbolOuter->symbol, $this->candleType, $this->exchange);
 

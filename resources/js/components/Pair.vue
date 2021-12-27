@@ -31,6 +31,9 @@
                 :width="460"
             ></trading-vue>
         </div>
+        <br>
+        <div class="ml-3 mr-3">{{ error }}</div>
+        <button class="btn btn-xs" v-if="error" @click="getData(symbols[0].name, symbols[1].name, type, candleType)">Try again</button>
     </div>
 </template>
 <script>
@@ -54,6 +57,7 @@ export default {
 
     data: function() {
         return {
+            error: null,
             tradingVue1: new DataCube({
                 chart: {
                     data: []
@@ -99,6 +103,12 @@ export default {
 
     methods: {
         getData: function(s1, s2, type, candleType) {
+
+            this.error = null;
+            this.loading = true;
+
+            let _this = this;
+
             axios.get('/chart_data', {
                 params: {
                     s1,
@@ -120,6 +130,13 @@ export default {
                 ];
 
                 this.$emit('lasts', lasts)
+                this.loading = false;
+            }).catch(err => {
+
+                console.log(err);
+
+                this.error = 'error getting data';
+                this.loading = false;
             });
         },
         setChartHeading: function(val) {

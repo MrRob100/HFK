@@ -107,7 +107,13 @@ class FormatPairService
             if ($exchange === 'binance') {
 
                 $start = $startTime * 1000;
-                $candles = json_decode(file_get_contents("https://www.binance.com/api/v3/klines?symbol={$symbol}&interval={$candleType}&startTime=$start"), true);
+                try {
+                    $candles = json_decode(file_get_contents("https://www.binance.com/api/v3/klines?symbol={$symbol}&interval={$candleType}&startTime=$start"), true);
+                }
+                catch(\Exception $e) {
+                    dump($e->getMessage());
+                    sleep(10);
+                }
             }
 
             if ($exchange === 'kucoin') {

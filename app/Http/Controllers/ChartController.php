@@ -94,6 +94,26 @@ class ChartController extends Controller
 
     public function kucoin(Request $request): array
     {
+        if ($request->s1 === 'RIF' && $request->s2 === 'BTC') {
+            $rifbtc = $this->kucoinGetService->apiCall('RIF', $request->candleType, 'BTC');
+
+            $response1 = $this->binanceGetService->apiCall('RIF', $request->candleType);
+            $response2 = $this->kucoinGetService->apiCall('BTC', $request->candleType);
+
+            return [
+                'first' => $this->formatBinanceResponse($response1),
+                'pair' => $this->formatKucoinResponse($rifbtc),
+                'second' => $this->formatKucoinResponse($response2),
+                'events' => [
+                    'middlePrice1' => null,
+                    'middlePrice2' => null,
+                    'middlePrice3' => null,
+                ]
+            ];
+
+
+        }
+
         $response1 = $this->kucoinGetService->apiCall($request->s1, $request->candleType);
         $response2 = $this->kucoinGetService->apiCall($request->s2, $request->candleType);
 

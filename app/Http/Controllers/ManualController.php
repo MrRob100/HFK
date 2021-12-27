@@ -20,7 +20,15 @@ class ManualController extends Controller
 
             $price = 1;
             if ($request->of !== 'USDT') {
-                $price = json_decode(file_get_contents("https://api.kucoin.com/api/v1/market/orderbook/level1?symbol={$request->of}-USDT"), true)['data']['price'];
+
+                $data = json_decode(file_get_contents("https://api.kucoin.com/api/v1/market/orderbook/level1?symbol={$request->of}-USDT"), true);
+                if (isset($data['data'])) {
+                    $price = json_decode(file_get_contents("https://api.kucoin.com/api/v1/market/orderbook/level1?symbol={$request->of}-USDT"), true)['data']['price'];
+                } else {
+                    $binance = json_decode(file_get_contents("https://www.binance.com/api/v3/ticker/price?symbol={$request->of}USDT"), true);
+                    $price = $binance['price'];
+                }
+
             }
 
             $amount = collect($result)->where('currency', '=', $request->of)->first()['available'];
