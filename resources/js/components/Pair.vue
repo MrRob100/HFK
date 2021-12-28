@@ -32,8 +32,8 @@
             ></trading-vue>
         </div>
         <br>
-        <div class="ml-3 mr-3">{{ error }}</div>
-        <button class="btn btn-xs" v-if="error" @click="getData(symbols[0].name, symbols[1].name, type, candleType)">Try again</button>
+        <div class="ml-3 mr-3 mt-3">{{ error }}</div>
+        <button class="btn btn-primary btn-sm" v-if="error" @click="getData(symbols[0].name, symbols[1].name, type, candleType)">Try again</button>
     </div>
 </template>
 <script>
