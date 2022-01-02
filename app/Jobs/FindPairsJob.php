@@ -89,14 +89,19 @@ class FindPairsJob
         });
 
 //        $filtered2 = $filtered->filter(function ($value, $key) {
-//            if (str_contains($value->symbol, 'STX')) {
+//            if (str_contains($value->symbol, 'RIF')) {
 //                return $value;
 //            }
 //        });
 
-        $filtered2 = $filtered;
 
-        dump('total: ' . $filtered->count() * $filtered2->count());
+        $object = (object) ['symbol' => 'EOSUSDT'];
+
+        $filtered2 = collect([0 => $object]);
+
+//        dd($c);
+
+//        $filtered2 = $filtered;
 
         $i = 0;
 

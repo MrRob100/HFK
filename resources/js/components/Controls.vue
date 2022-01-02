@@ -22,9 +22,6 @@
                         <button @click="getPosition(symbol2, 'two')" class="btn btn-info mb-2">Balance {{ symbol2 }}: {{ bal.two }} (${{ Math.floor(bal.twoUSD) }})</button>
                         <br>
                     </div>
-                    <div v-if="symbol1 === 'RIF' && symbol2 === 'BTC'" class="col-12">
-                        <button @click="getRIFBTC()" class="btn btn-info mb-2">Balance Both in BTC: {{ (bal.oneUSD / (bal.twoUSD / bal.two)) + bal.two }}</button>
-                    </div>
                     <div class="col-12">
                         <button @click="getPosition('USDT', 'usdt')" class="btn btn-info mb-2">Balance USDT: ${{ Math.floor(bal.usdt) }}</button>
                     </div>
@@ -97,10 +94,6 @@ export default {
         showInputForm: function() {
             this.showForm = !this.showForm;
         },
-        getRIFBTC: function() {
-            this.getPosition('RIF', 'one');
-            this.getPosition('BTC', 'two');
-        },
         getPosition: function(symbol, which) {
             let _this = this;
             axios.get("/position", {
@@ -108,7 +101,6 @@ export default {
                     of: symbol,
                 }
             }).then(function (response) {
-
                 let suffix = which + 'USD';
 
                 if (response.data === "") {

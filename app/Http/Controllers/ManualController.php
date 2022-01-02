@@ -28,14 +28,14 @@ class ManualController extends Controller
                     $binance = json_decode(file_get_contents("https://www.binance.com/api/v3/ticker/price?symbol={$request->of}USDT"), true);
                     $price = $binance['price'];
                 }
-
             }
 
-            $amount = collect($result)->where('currency', '=', $request->of)->first()['available'];
+            $amount = collect($result)->where('currency', '=', $request->of)->first();
 
             return [
-                'qty' => $amount,
-                'market_value' => $amount * $price,
+                'position_data' => $amount,
+                'qty' => $amount['balance'],
+                'market_value' => $amount['balance'] * $price,
                 'price' => $price,
             ];
         } catch (HttpException $e) {
